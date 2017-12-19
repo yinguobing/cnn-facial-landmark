@@ -235,3 +235,18 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
     # that feature; `labels` is a batch of labels.
     feature, label = iterator.get_next()
     return feature, label
+
+
+def main(unused_argv):
+    """MAIN"""
+    # Create the Estimator
+    estimator = tf.estimator.Estimator(model_fn=cnn_model_fn, model_dir="./train")
+
+    # Train the model
+    def _train_input_fn():
+        return input_fn(record_file="./train.record", batch_size=32, num_epochs=10, shuffle=True)
+
+    estimator.train(input_fn=_train_input_fn, steps=200000)
+
+if __name__ == '__main__':
+    tf.app.run()
