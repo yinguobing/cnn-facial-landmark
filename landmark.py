@@ -210,3 +210,28 @@ def _parse_function(record):
     points = tf.cast(parsed_features['label/points'], tf.float32)
 
     return {"x": image_reshaped, "name": parsed_features['image/filename']}, points
+
+
+def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
+    """
+    Input function required for TensorFlow Estimator.
+    """
+    dataset = tf.data.TFRecordDataset(record_file)
+
+    # Use `Dataset.map()` to build a pair of a feature dictionary and a label
+    # tensor for each example.
+    dataset = dataset.map(_parse_function)
+    if shuffle is True:
+        dataset = dataset.shuffle(buffer_size=10000)
+    if batch_size != 1:
+        dataset = dataset.batch(batch_size)
+    if num_epochs != 1:
+        dataset = dataset.repeat(num_epochs)
+
+    # Make dataset iteratable.
+    iterator = dataset.make_one_shot_iterator()
+
+    # `features` is a dictionary in which each value is a batch of values for
+    # that feature; `labels` is a batch of labels.
+    feature, label = iterator.get_next()
+    return feature, label
