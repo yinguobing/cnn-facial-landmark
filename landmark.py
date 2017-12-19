@@ -190,3 +190,23 @@ def cnn_model_fn(features, labels, mode):
             predictions=logits)}
     return tf.estimator.EstimatorSpec(
         mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+
+
+def _parse_function(record):
+    """
+    Extract data from a `tf.Example` protocol buffer.
+    """
+    # Defaults are not specified since both keys are required.
+    keys_to_features = {
+        'image/filename': tf.FixedLenFeature([], tf.string),
+        'image/encoded': tf.FixedLenFeature([], tf.string),
+        'label/points': tf.FixedLenFeature([136], tf.float32),
+    }
+    parsed_features = tf.parse_single_example(record, keys_to_features)
+
+    # Extract features from single example
+    image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
+    image_reshaped = tf.reshape(image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
+    points = tf.cast(parsed_features['label/points'], tf.float32)
+
+    return {"x": image_reshaped, "name": parsed_features['image/filename']}, points
