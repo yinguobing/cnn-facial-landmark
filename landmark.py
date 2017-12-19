@@ -8,6 +8,8 @@ IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNEL = 3
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 
 def cnn_model_fn(features, labels, mode):
     """
@@ -206,7 +208,8 @@ def _parse_function(record):
 
     # Extract features from single example
     image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
-    image_reshaped = tf.reshape(image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
+    image_reshaped = tf.reshape(
+        image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
     points = tf.cast(parsed_features['label/points'], tf.float32)
 
     return {"x": image_reshaped, "name": parsed_features['image/filename']}, points
@@ -240,13 +243,15 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
 def main(unused_argv):
     """MAIN"""
     # Create the Estimator
-    estimator = tf.estimator.Estimator(model_fn=cnn_model_fn, model_dir="./train")
+    estimator = tf.estimator.Estimator(
+        model_fn=cnn_model_fn, model_dir="./train")
 
     # Train the model
     def _train_input_fn():
         return input_fn(record_file="./train.record", batch_size=32, num_epochs=10, shuffle=True)
 
     estimator.train(input_fn=_train_input_fn, steps=200000)
+
 
 if __name__ == '__main__':
     tf.app.run()
