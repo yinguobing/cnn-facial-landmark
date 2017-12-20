@@ -19,8 +19,8 @@ def cnn_model_fn(features, labels, mode):
     # Input feature x should be of shape (batch_size, image_width, image_height, color_channels).
     # Image shape should be checked for safety reasons at early stages, and could be removed
     # before training actually starts.
-    assert features['x'].shape[1:] == (
-        IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL), "Image size does not match."
+    # assert features['x'].shape[1:] == (
+    #     IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL), "Image size does not match."
     inputs = tf.to_float(features['x'], name="input_to_float")
 
     # |== Layer 1 ==|
