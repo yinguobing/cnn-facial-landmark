@@ -258,9 +258,18 @@ def main(unused_argv):
             num_epochs=1,
             shuffle=False)
 
+    # Function for predicting.
+    def _predict_input_fn():
+        return input_fn(
+            record_file="./test.record",
+            batch_size=1,
+            num_epochs=1,
+            shuffle=False)
+
     estimator.train(input_fn=_train_input_fn, steps=200000)
     # eval_results = pupil_detector.evaluate(input_fn=eval_input_fn)
     # print(eval_results)
+    # predictions = pupil_detector.predict(input_fn=predict_input_fn)
 
 
 if __name__ == '__main__':
