@@ -177,7 +177,7 @@ def cnn_model_fn(features, labels, mode):
 
     # Caculate loss using minimal squared error.
     label_tensor = tf.convert_to_tensor(labels, dtype=tf.float32)
-    loss = tf.losses.mean_pairwise_squared_error(
+    loss = tf.losses.mean_squared_error(
         labels=label_tensor, predictions=logits)
 
     # Configure the train OP for TRAIN mode.
