@@ -19,8 +19,8 @@ def cnn_model_fn(features, labels, mode):
     # Input feature x should be of shape (batch_size, image_width, image_height, color_channels).
     # Image shape should be checked for safety reasons at early stages, and could be removed
     # before training actually starts.
-    # assert features['x'].shape[1:] == (
-    #     IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL), "Image size does not match."
+    assert features['x'].shape[1:] == (
+        IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL), "Image size does not match."
     inputs = tf.to_float(features['x'], name="input_to_float")
 
     # |== Layer 1 ==|
@@ -254,7 +254,7 @@ def main(unused_argv):
     def _eval_input_fn():
         return input_fn(
             record_file="./validation.record",
-            batch_size=1,
+            batch_size=2,
             num_epochs=1,
             shuffle=False)
 
@@ -262,12 +262,18 @@ def main(unused_argv):
     def _predict_input_fn():
         return input_fn(
             record_file="./test.record",
-            batch_size=1,
+            batch_size=2,
             num_epochs=1,
             shuffle=False)
 
     # Choose mode between Train, Evaluate and Predict
-    mode = tf.estimator.ModeKeys.TRAIN
+    mode_dict = {
+        'train': tf.estimator.ModeKeys.TRAIN,
+        'eval': tf.estimator.ModeKeys.EVAL,
+        'predict': tf.estimator.ModeKeys.PREDICT
+    }
+
+    mode = mode_dict['predict']
 
     if mode == tf.estimator.ModeKeys.TRAIN:
         estimator.train(input_fn=_train_input_fn, steps=200000)
