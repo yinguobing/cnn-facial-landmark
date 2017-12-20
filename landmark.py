@@ -248,7 +248,7 @@ def main(unused_argv):
 
     # Train the model
     def _train_input_fn():
-        return input_fn(record_file="./train.record", batch_size=32, num_epochs=10, shuffle=True)
+        return input_fn(record_file="./train.record", batch_size=32, num_epochs=50, shuffle=True)
 
     estimator.train(input_fn=_train_input_fn, steps=200000)
 
