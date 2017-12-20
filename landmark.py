@@ -175,7 +175,7 @@ def cnn_model_fn(features, labels, mode):
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dict)
 
-    # Caculate loss using minimal squared error.
+    # Caculate loss using mean squared error.
     label_tensor = tf.convert_to_tensor(labels, dtype=tf.float32)
     loss = tf.losses.mean_squared_error(
         labels=label_tensor, predictions=logits)
@@ -243,31 +243,32 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
     return feature, label
 
 
+# Function for training.
+def _train_input_fn():
+    return input_fn(record_file="./train.record", batch_size=32, num_epochs=50, shuffle=True)
+
+# Function for evaluating.
+def _eval_input_fn():
+    return input_fn(
+        record_file="./validation.record",
+        batch_size=2,
+        num_epochs=1,
+        shuffle=False)
+
+# Function for predicting.
+def _predict_input_fn():
+    return input_fn(
+        record_file="./test.record",
+        batch_size=2,
+        num_epochs=1,
+        shuffle=False)
+
+
 def main(unused_argv):
     """MAIN"""
     # Create the Estimator
     estimator = tf.estimator.Estimator(
         model_fn=cnn_model_fn, model_dir="./train")
-
-    # Function for training.
-    def _train_input_fn():
-        return input_fn(record_file="./train.record", batch_size=32, num_epochs=50, shuffle=True)
-
-    # Function for evaluating.
-    def _eval_input_fn():
-        return input_fn(
-            record_file="./validation.record",
-            batch_size=2,
-            num_epochs=1,
-            shuffle=False)
-
-    # Function for predicting.
-    def _predict_input_fn():
-        return input_fn(
-            record_file="./test.record",
-            batch_size=2,
-            num_epochs=1,
-            shuffle=False)
 
     # Choose mode between Train, Evaluate and Predict
     mode_dict = {
@@ -276,10 +277,10 @@ def main(unused_argv):
         'predict': tf.estimator.ModeKeys.PREDICT
     }
 
-    mode = mode_dict['predict']
+    mode = mode_dict['train']
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        estimator.train(input_fn=_train_input_fn, steps=200000)
+        estimator.train(input_fn=_train_input_fn, steps=2000000)
     elif mode == tf.estimator.ModeKeys.EVAL:
         evaluation = estimator.evaluate(input_fn=_eval_input_fn)
         print(evaluation)
@@ -287,8 +288,7 @@ def main(unused_argv):
         predictions = estimator.predict(input_fn=_predict_input_fn)
         for _, result in enumerate(predictions):
             img = cv2.imread(result['name'].decode('ASCII') + '.jpg')
-            marks = np.reshape(result['logits'], (-1, 2)) * IMG_WIDTH + IMG_WIDTH / 2
-            print(marks)
+            marks = np.reshape(result['logits'], (-1, 2)) * IMG_WIDTH
             for mark in marks:
                 cv2.circle(img, (int(mark[0]), int(
                     mark[1])), 1, (0, 255, 0), -1, cv2.LINE_AA)
