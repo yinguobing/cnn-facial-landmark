@@ -2,7 +2,10 @@
 Convolutional Neural Network Estimator for facial landmark detection.
 """
 
+import numpy as np
 import tensorflow as tf
+
+import cv2
 
 IMG_WIDTH = 128
 IMG_HEIGHT = 128
@@ -282,7 +285,17 @@ def main(unused_argv):
         print(evaluation)
     else:
         predictions = estimator.predict(input_fn=_predict_input_fn)
-        print(predictions)
+        for _, result in enumerate(predictions):
+            img = cv2.imread(result['name'].decode('ASCII') + '.jpg')
+            marks = np.reshape(result['logits'], (-1, 2)) * IMG_WIDTH + IMG_WIDTH / 2
+            print(marks)
+            for mark in marks:
+                cv2.circle(img, (int(mark[0]), int(
+                    mark[1])), 1, (0, 255, 0), -1, cv2.LINE_AA)
+            img = cv2.resize(img, (512, 512))
+            cv2.imshow('result', img)
+            cv2.waitKey()
+
 
 if __name__ == '__main__':
     tf.app.run()
