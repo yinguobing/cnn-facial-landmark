@@ -246,11 +246,21 @@ def main(unused_argv):
     estimator = tf.estimator.Estimator(
         model_fn=cnn_model_fn, model_dir="./train")
 
-    # Train the model
+    # Function for training.
     def _train_input_fn():
         return input_fn(record_file="./train.record", batch_size=32, num_epochs=50, shuffle=True)
 
+    # Function for evaluating.
+    def _eval_input_fn():
+        return input_fn(
+            record_file="./validation.record",
+            batch_size=1,
+            num_epochs=1,
+            shuffle=False)
+
     estimator.train(input_fn=_train_input_fn, steps=200000)
+    # eval_results = pupil_detector.evaluate(input_fn=eval_input_fn)
+    # print(eval_results)
 
 
 if __name__ == '__main__':
