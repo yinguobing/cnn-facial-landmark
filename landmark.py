@@ -266,11 +266,17 @@ def main(unused_argv):
             num_epochs=1,
             shuffle=False)
 
-    estimator.train(input_fn=_train_input_fn, steps=200000)
-    # eval_results = pupil_detector.evaluate(input_fn=eval_input_fn)
-    # print(eval_results)
-    # predictions = pupil_detector.predict(input_fn=predict_input_fn)
+    # Choose mode between Train, Evaluate and Predict
+    mode = tf.estimator.ModeKeys.TRAIN
 
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        estimator.train(input_fn=_train_input_fn, steps=200000)
+    elif mode == tf.estimator.ModeKeys.EVAL:
+        evaluation = estimator.evaluate(input_fn=_eval_input_fn)
+        print(evaluation)
+    else:
+        predictions = estimator.predict(input_fn=_predict_input_fn)
+        print(predictions)
 
 if __name__ == '__main__':
     tf.app.run()
