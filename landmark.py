@@ -186,7 +186,11 @@ def cnn_model_fn(features, labels, mode):
         train_op = optimizer.minimize(
             loss=loss,
             global_step=tf.train.get_global_step())
-        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+        return tf.estimator.EstimatorSpec(
+            mode=mode,
+            loss=loss,
+            train_op=train_op,
+            export_outputs={'marks': tf.estimator.export.RegressionOutput(logits)})
 
     # Add evaluation metrics (for EVAL mode)
     eval_metric_ops = {
