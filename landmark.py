@@ -266,6 +266,16 @@ def _predict_input_fn():
         shuffle=False)
 
 
+def serving_input_receiver_fn():
+    """An input receiver that expects a serialized tf.Example."""
+    image = tf.placeholder(dtype=tf.uint8,
+                           shape=[None, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL],
+                           name='input_image_tensor')
+    receiver_tensor = {'image': image}
+    feature = image
+    return tf.estimator.export.ServingInputReceiver(feature, receiver_tensor)
+
+
 def main(unused_argv):
     """MAIN"""
     # Create the Estimator
