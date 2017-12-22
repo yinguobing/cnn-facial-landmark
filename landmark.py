@@ -296,10 +296,15 @@ def main(unused_argv):
     mode = mode_dict['train']
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        estimator.train(input_fn=_train_input_fn, steps=2000000)
+        estimator.train(input_fn=_train_input_fn, steps=200000)
+
+        # Export result as SavedModel.
+        estimator.export_savedmodel('./saved_model', serving_input_receiver_fn)
+
     elif mode == tf.estimator.ModeKeys.EVAL:
         evaluation = estimator.evaluate(input_fn=_eval_input_fn)
         print(evaluation)
+
     else:
         predictions = estimator.predict(input_fn=_predict_input_fn)
         for _, result in enumerate(predictions):
