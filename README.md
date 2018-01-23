@@ -4,6 +4,14 @@ Facial landmark detection based on convolution neural network.
 
 The model is build with TensorFlow, the training code is provided so you can train your own model with your own datasets.
 
+Here are some sample gifs extracted from video file showing the detection result compared with Dlib. The result of CNN is on the right side.
+
+![](https://github.com/yinguobing/cnn-facial-landmark/blob/master/demo01.gif)
+
+![](https://github.com/yinguobing/cnn-facial-landmark/blob/master/demo02.gif)
+
+![](https://github.com/yinguobing/cnn-facial-landmark/blob/master/demo03.gif)
+
 ## Background
 This repo is a part of my deep learning series posts. For all the posts please refer to the following links.
 
