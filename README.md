@@ -1,3 +1,14 @@
+## Update 2019-04-22
+This repository now has 199 github stars that is totally beyond my expectation. Whoever you are, wherever you are from and whichever language you speak, I want to say "Thank you!" to you 199 github friends for your interest.
+
+Human facial landmark detection is easy to get hands on but also hard enough to demonstrates the power of deep neural networks, that is the reason I chose for my learning project. Even I had tried my best to keep a exhaustive record that turned into this repository and the companion tutorial, they are still sloppy and confusing in some parts.
+
+The code is published a year ago and during this time a lot things have changed. TensorFlow 2.0 is coming and the exported model seems not working in the latest release of tf1.13. I think it's better to make this project up to date and keep being beneficial to the community.
+
+I've got a full time job which costs nearly 12 hours(including traffic time) in my daily life, but I will try my best to keep the pace.
+
+Feel free to open issues so that we can discuss in detail.
+
 # cnn-facial-landmark
 
 Facial landmark detection based on convolution neural network.
