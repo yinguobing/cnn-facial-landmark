@@ -20,7 +20,7 @@ def cnn_model_fn(features, labels, mode):
     """
     # |== Layer 0: input layer ==|
     # Input feature x should be of shape (batch_size, image_width, image_height,
-    # color_channels). As we will directly using the decoded image tensor of 
+    # color_channels). As we will directly using the decoded image tensor of
     # data type int8, a convertion should be performed.
     inputs = tf.cast(features['image'], tf.float32)
 
@@ -166,35 +166,50 @@ def cnn_model_fn(features, labels, mode):
         name="logits")
 
     # Make prediction for PREDICATION mode.
-    predictions_dict = {"logits": logits}
-
+    predictions = logits
     if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dict)
+        return tf.estimator.EstimatorSpec(
+            mode=mode,
+            predictions=predictions,
+            export_outputs={
+                'predict': tf.estimator.export.PredictOutput(predictions)
+            })
 
     # Calculate loss using mean squared error.
     label_tensor = tf.convert_to_tensor(labels, dtype=tf.float32)
     loss = tf.losses.mean_squared_error(
-        labels=label_tensor, predictions=logits)
+        labels=label_tensor, predictions=predictions)
+
+    # Create a tensor logging purposes.
+    tf.identity(loss, name='loss')
+    tf.summary.scalar('loss', loss)
 
     # Configure the train OP for TRAIN mode.
     if mode == tf.estimator.ModeKeys.TRAIN:
         optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+
         train_op = optimizer.minimize(
             loss=loss,
             global_step=tf.train.get_global_step())
-        return tf.estimator.EstimatorSpec(
-            mode=mode,
-            loss=loss,
-            train_op=train_op,
-            export_outputs={'marks': tf.estimator.export.RegressionOutput(logits)})
+    else:
+        train_op = None
 
-    # Add evaluation metrics (for EVAL mode)
-    eval_metric_ops = {
-        "MSE": tf.metrics.root_mean_squared_error(
-            labels=label_tensor,
-            predictions=logits)}
+    mse_metrics = tf.metrics.root_mean_squared_error(
+        labels=label_tensor,
+        predictions=predictions)
+
+    metrics = {'eval_mse': mse_metrics}
+    # # Create a tensor named train_MSE for logging purposes
+    tf.identity(mse_metrics[1], name='eval_mse')
+    tf.summary.scalar('eval_mse', mse_metrics[1])
+
     return tf.estimator.EstimatorSpec(
-        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+        mode=mode,
+        predictions=predictions,
+        loss=loss,
+        train_op=train_op,
+        eval_metric_ops=metrics
+    )
 
 
 def _parse_function(record):
