@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 # CAUTION
-# The image width, height and channels should be consist with your training 
+# The image width, height and channels should be consist with your training
 # data. Here they are set as 128 to be complied with the tutorial. Mismatching
 # of the image size will cause error of mismatching tensor shapes.
 IMG_WIDTH = 128
@@ -20,12 +20,9 @@ def cnn_model_fn(features, labels, mode):
     """
     # |== Layer 0: input layer ==|
     # Input feature x should be of shape (batch_size, image_width, image_height,
-    # color_channels). Image shape should be checked for safety reasons at early
-    # stages, and could be removed before training actually starts.
-
-    # assert features['x'].shape[1:] == (
-    #     IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL), "Image size does not match."
-    inputs = tf.to_float(features['x'], name="input_to_float")
+    # color_channels). As we will directly using the decoded image tensor of 
+    # data type int8, a convertion should be performed.
+    inputs = tf.cast(features['image'], tf.float32)
 
     # |== Layer 1 ==|
 
@@ -169,10 +166,8 @@ def cnn_model_fn(features, labels, mode):
         name="logits")
 
     # Make prediction for PREDICATION mode.
-    predictions_dict = {
-        "name": features['name'],
-        "logits": logits
-    }
+    predictions_dict = {"logits": logits}
+
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dict)
 
@@ -220,7 +215,7 @@ def _parse_function(record):
         image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
     points = tf.cast(parsed_features['label/marks'], tf.float32)
 
-    return {"x": image_reshaped, "name": parsed_features['image/filename']}, points
+    return {"image": image_reshaped}, points
 
 
 def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
