@@ -117,7 +117,7 @@ def cnn_model_fn(features, labels, mode):
         activation=tf.nn.relu)
 
     # Convolutional layer
-    # Conputes 128 features using a 3x3 filter with ReLU activation.
+    # Computes 128 features using a 3x3 filter with ReLU activation.
     conv7 = tf.layers.conv2d(
         inputs=conv6,
         filters=128,
@@ -171,7 +171,7 @@ def cnn_model_fn(features, labels, mode):
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions_dict)
 
-    # Caculate loss using mean squared error.
+    # Calculate loss using mean squared error.
     label_tensor = tf.convert_to_tensor(labels, dtype=tf.float32)
     loss = tf.losses.mean_squared_error(
         labels=label_tensor, predictions=logits)
