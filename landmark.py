@@ -1,17 +1,17 @@
 """
-Convolutional Neural Network Estimator for facial landmark detection.
+Convolutional Neural Network for facial landmarks detection.
 """
-
+import cv2
 import numpy as np
 import tensorflow as tf
 
-import cv2
-
+# CAUTION
+# The image width, height and channels should be consist with your training 
+# data. Here they are set as 128 to be complied with the tutorial. Mismatching
+# of the image size will cause error of mismatching tensor shapes.
 IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNEL = 3
-
-tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def cnn_model_fn(features, labels, mode):
@@ -19,9 +19,10 @@ def cnn_model_fn(features, labels, mode):
     The model function for the network.
     """
     # |== Layer 0: input layer ==|
-    # Input feature x should be of shape (batch_size, image_width, image_height, color_channels).
-    # Image shape should be checked for safety reasons at early stages, and could be removed
-    # before training actually starts.
+    # Input feature x should be of shape (batch_size, image_width, image_height,
+    # color_channels). Image shape should be checked for safety reasons at early
+    # stages, and could be removed before training actually starts.
+
     # assert features['x'].shape[1:] == (
     #     IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL), "Image size does not match."
     inputs = tf.to_float(features['x'], name="input_to_float")
@@ -209,7 +210,7 @@ def _parse_function(record):
     keys_to_features = {
         'image/filename': tf.FixedLenFeature([], tf.string),
         'image/encoded': tf.FixedLenFeature([], tf.string),
-        'label/points': tf.FixedLenFeature([136], tf.float32),
+        'label/marks': tf.FixedLenFeature([136], tf.float32),
     }
     parsed_features = tf.parse_single_example(record, keys_to_features)
 
@@ -217,7 +218,7 @@ def _parse_function(record):
     image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
     image_reshaped = tf.reshape(
         image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
-    points = tf.cast(parsed_features['label/points'], tf.float32)
+    points = tf.cast(parsed_features['label/marks'], tf.float32)
 
     return {"x": image_reshaped, "name": parsed_features['image/filename']}, points
 
@@ -319,4 +320,5 @@ def main(unused_argv):
 
 
 if __name__ == '__main__':
+    tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run()
