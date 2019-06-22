@@ -13,6 +13,10 @@ IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNEL = 3
 
+# The input functions for train, validation and serving shares a same feature
+# for our model function. Name it here.
+INPUT_FEATURE = 'image'
+
 
 def cnn_model_fn(features, labels, mode):
     """
@@ -22,7 +26,7 @@ def cnn_model_fn(features, labels, mode):
     # Input feature x should be of shape (batch_size, image_width, image_height,
     # color_channels). As we will directly using the decoded image tensor of
     # data type int8, a convertion should be performed.
-    inputs = tf.cast(features, tf.float32)
+    inputs = tf.cast(features[INPUT_FEATURE], tf.float32)
 
     # |== Layer 1 ==|
 
@@ -176,9 +180,7 @@ def cnn_model_fn(features, labels, mode):
             })
 
     # Calculate loss using mean squared error.
-    label_tensor = tf.convert_to_tensor(labels, dtype=tf.float32)
-    loss = tf.losses.mean_squared_error(
-        labels=label_tensor, predictions=predictions)
+    loss = tf.losses.mean_squared_error(labels=labels, predictions=predictions)
 
     # Create a tensor logging purposes.
     tf.identity(loss, name='loss')
@@ -195,7 +197,7 @@ def cnn_model_fn(features, labels, mode):
         train_op = None
 
     mse_metrics = tf.metrics.root_mean_squared_error(
-        labels=label_tensor,
+        labels=labels,
         predictions=predictions)
 
     metrics = {'eval_mse': mse_metrics}
@@ -249,18 +251,22 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
     if num_epochs != 1:
         dataset = dataset.repeat(num_epochs)
 
-    # Make dataset iteratable.
+    # Make dataset iterator.
     iterator = dataset.make_one_shot_iterator()
 
     # `features` is a dictionary in which each value is a batch of values for
     # that feature; `labels` is a batch of labels.
-    feature, label = iterator.get_next()
-    return feature, label
+    image, label = iterator.get_next()
+    return {INPUT_FEATURE: image}, label
 
 
 def _train_input_fn():
     """Function for training."""
-    return input_fn(record_file="./train.record", batch_size=32, num_epochs=50, shuffle=True)
+    return input_fn(
+        record_file="./train.record",
+        batch_size=32,
+        num_epochs=50,
+        shuffle=True)
 
 
 def _eval_input_fn():
@@ -273,13 +279,16 @@ def _eval_input_fn():
 
 
 def serving_input_receiver_fn():
-    """An input receiver that expects a serialized tf.Example."""
-    image = tf.placeholder(dtype=tf.uint8,
-                           shape=[IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL],
-                           name='input_image_tensor')
-    receiver_tensor = {'image': image}
-    feature = tf.reshape(image, [-1, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
-    return tf.estimator.export.ServingInputReceiver(feature, receiver_tensor)
+    """An input function for TensorFlow Serving."""
+    reciever_tensors = tf.placeholder(
+        dtype=tf.uint8,
+        shape=[None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL],
+        name='input_image_tensor')
+    features = {INPUT_FEATURE: reciever_tensors}
+
+    return tf.estimator.export.ServingInputReceiver(
+        receiver_tensors=reciever_tensors,
+        features=features)
 
 
 def main(unused_argv):
@@ -297,8 +306,8 @@ def main(unused_argv):
     evaluation = estimator.evaluate(input_fn=_eval_input_fn)
     print(evaluation)
 
-    # TODO: Export trained model as SavedModel.
-    # estimator.export_saved_model('./saved_model', serving_input_receiver_fn)
+    # Export trained model as SavedModel.
+    estimator.export_savedmodel('./saved_model', serving_input_receiver_fn)
 
 
 if __name__ == '__main__':
