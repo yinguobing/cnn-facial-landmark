@@ -22,7 +22,7 @@ def cnn_model_fn(features, labels, mode):
     # Input feature x should be of shape (batch_size, image_width, image_height,
     # color_channels). As we will directly using the decoded image tensor of
     # data type int8, a convertion should be performed.
-    inputs = tf.cast(features['image'], tf.float32)
+    inputs = tf.cast(features, tf.float32)
 
     # |== Layer 1 ==|
 
@@ -230,7 +230,7 @@ def _parse_function(record):
         image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
     points = tf.cast(parsed_features['label/marks'], tf.float32)
 
-    return {"image": image_reshaped}, points
+    return image_reshaped, points
 
 
 def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
@@ -272,15 +272,6 @@ def _eval_input_fn():
         shuffle=False)
 
 
-def _predict_input_fn():
-    """Function for predicting."""
-    return input_fn(
-        record_file="./test.record",
-        batch_size=2,
-        num_epochs=1,
-        shuffle=False)
-
-
 def serving_input_receiver_fn():
     """An input receiver that expects a serialized tf.Example."""
     image = tf.placeholder(dtype=tf.uint8,
@@ -292,41 +283,22 @@ def serving_input_receiver_fn():
 
 
 def main(unused_argv):
-    """MAIN"""
+    """Train, eval and export the model."""
     # Create the Estimator
     estimator = tf.estimator.Estimator(
         model_fn=cnn_model_fn, model_dir="./train")
 
-    # Choose mode between Train, Evaluate and Predict
-    mode_dict = {
-        'train': tf.estimator.ModeKeys.TRAIN,
-        'eval': tf.estimator.ModeKeys.EVAL,
-        'predict': tf.estimator.ModeKeys.PREDICT
-    }
+    # Train for N steps.
+    tf.logging.info('Starting to train.')
+    estimator.train(input_fn=_train_input_fn, steps=500)
 
-    mode = mode_dict['train']
+    # Do evaluation after training.
+    tf.logging.info('Starting to evaluate.')
+    evaluation = estimator.evaluate(input_fn=_eval_input_fn)
+    print(evaluation)
 
-    if mode == tf.estimator.ModeKeys.TRAIN:
-        estimator.train(input_fn=_train_input_fn, steps=200000)
-
-        # Export result as SavedModel.
-        estimator.export_savedmodel('./saved_model', serving_input_receiver_fn)
-
-    elif mode == tf.estimator.ModeKeys.EVAL:
-        evaluation = estimator.evaluate(input_fn=_eval_input_fn)
-        print(evaluation)
-
-    else:
-        predictions = estimator.predict(input_fn=_predict_input_fn)
-        for _, result in enumerate(predictions):
-            img = cv2.imread(result['name'].decode('ASCII') + '.jpg')
-            marks = np.reshape(result['logits'], (-1, 2)) * IMG_WIDTH
-            for mark in marks:
-                cv2.circle(img, (int(mark[0]), int(
-                    mark[1])), 1, (0, 255, 0), -1, cv2.LINE_AA)
-            img = cv2.resize(img, (512, 512))
-            cv2.imshow('result', img)
-            cv2.waitKey()
+    # TODO: Export trained model as SavedModel.
+    # estimator.export_saved_model('./saved_model', serving_input_receiver_fn)
 
 
 if __name__ == '__main__':
