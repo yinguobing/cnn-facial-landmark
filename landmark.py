@@ -1,14 +1,33 @@
 """
 Convolutional Neural Network for facial landmarks detection.
 """
+import argparse
+
 import cv2
 import numpy as np
 import tensorflow as tf
 
-# CAUTION
-# The image width, height and channels should be consist with your training
-# data. Here they are set as 128 to be complied with the tutorial. Mismatching
-# of the image size will cause error of mismatching tensor shapes.
+# Add arguments parser to accept user specified arguments.
+parser = argparse.ArgumentParser()
+parser.add_argument('--train_record', default='train.record', type=str,
+                    help='Training record file')
+parser.add_argument('--val_record', default='validation.record', type=str,
+                    help='validation record file')
+parser.add_argument('--model_dir', default='train', type=str,
+                    help='training model directory')
+parser.add_argument('--export_dir', default=None, type=str,
+                    help='directory to export the saved model')
+parser.add_argument('--train_steps', default=1000, type=int,
+                    help='training steps')
+parser.add_argument('--num_epochs', default=1, type=int,
+                    help='epochs of training dataset')
+parser.add_argument('--batch_size', default=16, type=int,
+                    help='training batch size')
+
+
+# CAUTION: The image width, height and channels should be consist with your
+# training data. Here they are set as 128 to be complied with the tutorial.
+# Mismatching of the image size will cause error of mismatching tensor shapes.
 IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNEL = 3
@@ -246,10 +265,8 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
     dataset = dataset.map(_parse_function)
     if shuffle is True:
         dataset = dataset.shuffle(buffer_size=10000)
-    if batch_size != 1:
-        dataset = dataset.batch(batch_size)
-    if num_epochs != 1:
-        dataset = dataset.repeat(num_epochs)
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.repeat(num_epochs)
 
     # Make dataset iterator.
     iterator = dataset.make_one_shot_iterator()
@@ -293,23 +310,36 @@ def serving_input_receiver_fn():
 
 def main(unused_argv):
     """Train, eval and export the model."""
+    # Parse the arguments.
+    args = parser.parse_args(unused_argv[1:])
+
     # Create the Estimator
     estimator = tf.estimator.Estimator(
-        model_fn=cnn_model_fn, model_dir="./train")
+        model_fn=cnn_model_fn, model_dir=args.model_dir)
 
     # Train for N steps.
     tf.logging.info('Starting to train.')
-    estimator.train(input_fn=_train_input_fn, steps=500)
+    estimator.train(
+        input_fn=lambda: input_fn(record_file=args.train_record,
+                                  batch_size=args.batch_size,
+                                  num_epochs=args.num_epochs,
+                                  shuffle=True),
+        steps=args.train_steps)
 
     # Do evaluation after training.
     tf.logging.info('Starting to evaluate.')
-    evaluation = estimator.evaluate(input_fn=_eval_input_fn)
+    evaluation = estimator.evaluate(
+        input_fn=lambda: input_fn(record_file=args.val_record,
+                                  batch_size=1,
+                                  num_epochs=1,
+                                  shuffle=False))
     print(evaluation)
 
     # Export trained model as SavedModel.
-    estimator.export_savedmodel('./saved_model', serving_input_receiver_fn)
+    if args.export_dir is not None:
+        estimator.export_savedmodel(args.export_dir, serving_input_receiver_fn)
 
 
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
-    tf.app.run()
+    tf.app.run(main)
