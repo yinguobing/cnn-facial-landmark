@@ -32,8 +32,8 @@ IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNEL = 3
 
-# The input functions for train, validation and serving shares a same feature
-# for our model function. Name it here.
+# The input functions for train, validation and serving share a same feature
+# name with our model function. Name it here.
 INPUT_FEATURE = 'image'
 
 
