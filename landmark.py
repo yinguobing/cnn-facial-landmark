@@ -279,14 +279,14 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
 
 def serving_input_receiver_fn():
     """An input function for TensorFlow Serving."""
-    reciever_tensors = tf.placeholder(
+    receiver_tensors = tf.placeholder(
         dtype=tf.uint8,
         shape=[None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL],
         name='input_image_tensor')
-    features = {INPUT_FEATURE: reciever_tensors}
+    features = {INPUT_FEATURE: receiver_tensors}
 
     return tf.estimator.export.ServingInputReceiver(
-        receiver_tensors=reciever_tensors,
+        receiver_tensors=receiver_tensors,
         features=features)
 
 
