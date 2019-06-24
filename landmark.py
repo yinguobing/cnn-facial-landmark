@@ -277,24 +277,6 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
     return {INPUT_FEATURE: image}, label
 
 
-def _train_input_fn():
-    """Function for training."""
-    return input_fn(
-        record_file="./train.record",
-        batch_size=32,
-        num_epochs=50,
-        shuffle=True)
-
-
-def _eval_input_fn():
-    """Function for evaluating."""
-    return input_fn(
-        record_file="./validation.record",
-        batch_size=2,
-        num_epochs=1,
-        shuffle=False)
-
-
 def serving_input_receiver_fn():
     """An input function for TensorFlow Serving."""
     reciever_tensors = tf.placeholder(
