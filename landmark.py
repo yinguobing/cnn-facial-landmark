@@ -215,14 +215,15 @@ def cnn_model_fn(features, labels, mode):
     else:
         train_op = None
 
-    mse_metrics = tf.metrics.root_mean_squared_error(
+    # Create a metric.
+    rmse_metrics = tf.metrics.root_mean_squared_error(
         labels=labels,
         predictions=predictions)
+    metrics = {'eval_mse': rmse_metrics}
 
-    metrics = {'eval_mse': mse_metrics}
-    # # Create a tensor named train_MSE for logging purposes
-    tf.identity(mse_metrics[1], name='eval_mse')
-    tf.summary.scalar('eval_mse', mse_metrics[1])
+    # A tensor for metric logging
+    tf.identity(rmse_metrics[1], name='root_mean_squared_error')
+    tf.summary.scalar('root_mean_squared_error', rmse_metrics[1])
 
     # Generate a summary node for the images
     tf.summary.image('images', features[INPUT_FEATURE], max_outputs=6)
