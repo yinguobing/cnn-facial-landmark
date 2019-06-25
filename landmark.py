@@ -224,6 +224,9 @@ def cnn_model_fn(features, labels, mode):
     tf.identity(mse_metrics[1], name='eval_mse')
     tf.summary.scalar('eval_mse', mse_metrics[1])
 
+    # Generate a summary node for the images
+    tf.summary.image('images', features[INPUT_FEATURE], max_outputs=6)
+
     return tf.estimator.EstimatorSpec(
         mode=mode,
         predictions=predictions,
