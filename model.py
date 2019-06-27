@@ -152,5 +152,6 @@ class LandmarkModel(object):
             activation=None,
             use_bias=True,
             name="logits")
+        logits = tf.identity(logits, 'final_dense')
 
         return logits
