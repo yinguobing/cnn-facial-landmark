@@ -34,10 +34,6 @@ IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNEL = 3
 
-# The input functions for train, validation and serving share a same feature
-# name with our model function. Name it here.
-INPUT_FEATURE = 'image'
-
 
 def cnn_model_fn(features, labels, mode):
     """
@@ -45,7 +41,7 @@ def cnn_model_fn(features, labels, mode):
     """
     # Construct the network.
     model = LandmarkModel(output_size=68*2)
-    logits = model(features[INPUT_FEATURE])
+    logits = model(features)
 
     # Make prediction for PREDICATION mode.
     predictions = logits
@@ -85,7 +81,7 @@ def cnn_model_fn(features, labels, mode):
     tf.summary.scalar('root_mean_squared_error', rmse_metrics[1])
 
     # Generate a summary node for the images
-    tf.summary.image('images', features[INPUT_FEATURE], max_outputs=6)
+    tf.summary.image('images', features, max_outputs=6)
 
     return tf.estimator.EstimatorSpec(
         mode=mode,
@@ -137,20 +133,29 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
     # `features` is a dictionary in which each value is a batch of values for
     # that feature; `labels` is a batch of labels.
     image, label = iterator.get_next()
-    return {INPUT_FEATURE: image}, label
+    return image, label
 
 
 def serving_input_receiver_fn():
     """An input function for TensorFlow Serving."""
-    receiver_tensors = tf.placeholder(
-        dtype=tf.uint8,
-        shape=[None, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL],
-        name='input_image_tensor')
-    features = {INPUT_FEATURE: receiver_tensors}
 
-    return tf.estimator.export.ServingInputReceiver(
-        receiver_tensors=receiver_tensors,
-        features=features)
+    def _preprocess_image(image_bytes):
+        """Preprocess a single raw image."""
+        image = tf.image.decode_jpeg(image_bytes, channels=IMG_CHANNEL)
+        image.set_shape((None, None, IMG_CHANNEL))
+        image = tf.image.resize_images(image, [IMG_HEIGHT, IMG_WIDTH],
+                                       method=tf.image.ResizeMethod.BILINEAR,
+                                       align_corners=False)
+        return image
+    image_bytes_list = tf.compat.v1.placeholder(
+        shape=[None], dtype=tf.string,
+        name='encoded_image_string_tensor')
+    image = tf.map_fn(_preprocess_image, image_bytes_list,
+                      dtype=tf.int8, back_prop=False)
+
+    return tf.estimator.export.TensorServingInputReceiver(
+        features=image,
+        receiver_tensors={'image_bytes': image_bytes_list})
 
 
 def main(unused_argv):
