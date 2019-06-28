@@ -130,8 +130,7 @@ def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
     # Make dataset iterator.
     iterator = dataset.make_one_shot_iterator()
 
-    # `features` is a dictionary in which each value is a batch of values for
-    # that feature; `labels` is a batch of labels.
+    # Return the feature and label.
     image, label = iterator.get_next()
     return image, label
 
