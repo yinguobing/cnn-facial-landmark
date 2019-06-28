@@ -5,12 +5,12 @@ class LandmarkModel(object):
     def __init__(self, output_size):
         self.output_size = output_size
 
-    def __call__(self, input_node):
+    def __call__(self, input_tensor):
         # |== Layer 0: input layer ==|
         # Input feature x should be of shape (batch_size, image_width, image_height,
         # color_channels). As we will directly using the decoded image tensor of
         # data type int8, a convertion should be performed.
-        inputs = tf.cast(input_node, tf.float32)
+        inputs = tf.cast(input_tensor, tf.float32)
 
         # |== Layer 1 ==|
 
