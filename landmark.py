@@ -150,7 +150,7 @@ def serving_input_receiver_fn():
         shape=[None], dtype=tf.string,
         name='encoded_image_string_tensor')
     image = tf.map_fn(_preprocess_image, image_bytes_list,
-                      dtype=tf.int8, back_prop=False)
+                      dtype=tf.float32, back_prop=False)
 
     return tf.estimator.export.TensorServingInputReceiver(
         features=image,
