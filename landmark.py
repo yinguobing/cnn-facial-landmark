@@ -25,6 +25,8 @@ parser.add_argument('--num_epochs', default=None, type=int,
                     help='epochs of training dataset')
 parser.add_argument('--batch_size', default=16, type=int,
                     help='training batch size')
+parser.add_argument('--raw_input', default=False, type=bool,
+                    help='Use raw tensor as model input.')
 
 
 # CAUTION: The image width, height and channels should be consist with your
@@ -157,6 +159,26 @@ def serving_input_receiver_fn():
         receiver_tensors={'image_bytes': image_bytes_list})
 
 
+def serving_input_tensor_receiver_fn():
+    """An input function accept raw tensors."""
+    def _preprocess_image(image_tensor):
+        """Preprocess a single raw image tensor."""
+        image = tf.image.resize_images(image_tensor, [IMG_HEIGHT, IMG_WIDTH],
+                                       method=tf.image.ResizeMethod.BILINEAR,
+                                       align_corners=False)
+        return image
+
+    image_tensor = tf.compat.v1.placeholder(
+        shape=[None, None, None, 3], dtype=tf.uint8,
+        name='image_tensor')
+    image = tf.map_fn(_preprocess_image, image_tensor,
+                      dtype=tf.float32, back_prop=False)
+
+    return tf.estimator.export.TensorServingInputReceiver(
+        features=image,
+        receiver_tensors={'image': image_tensor})
+
+
 def main(unused_argv):
     """Train, eval and export the model."""
     # Parse the arguments.
@@ -185,8 +207,9 @@ def main(unused_argv):
     print(evaluation)
 
     # Export trained model as SavedModel.
+    receiver_fn = serving_input_tensor_receiver_fn if args.raw_input else serving_input_receiver_fn
     if args.export_dir is not None:
-        estimator.export_savedmodel(args.export_dir, serving_input_receiver_fn)
+        estimator.export_savedmodel(args.export_dir, receiver_fn)
 
 
 if __name__ == '__main__':
