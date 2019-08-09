@@ -159,7 +159,7 @@ def serving_input_receiver_fn():
         receiver_tensors={'image_bytes': image_bytes_list})
 
 
-def serving_input_tensor_receiver_fn():
+def tensor_input_receiver_fn():
     """An input function accept raw tensors."""
     def _preprocess_image(image_tensor):
         """Preprocess a single raw image tensor."""
@@ -207,7 +207,7 @@ def main(unused_argv):
     print(evaluation)
 
     # Export trained model as SavedModel.
-    receiver_fn = serving_input_tensor_receiver_fn if args.raw_input else serving_input_receiver_fn
+    receiver_fn = tensor_input_receiver_fn if args.raw_input else serving_input_receiver_fn
     if args.export_dir is not None:
         estimator.export_savedmodel(args.export_dir, receiver_fn)
 
