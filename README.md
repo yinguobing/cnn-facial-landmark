@@ -44,7 +44,7 @@ Before training started, make sure the following requirements are met.
 - a directory to store the check point files.
 - hyper parameters like training steps, batch size, number of epochs.
 
-The following example shows how to train the model for 500 steps and evaluate it after training.
+The following command shows how to train the model for 500 steps and evaluate it after training.
 
 ```bash
 # From the repo's root directory
@@ -60,7 +60,7 @@ python3 landmark.py \
 
 ### For cloud applications
 
-For The application in the cloud, TensorFlow's [SavedModel](https://www.tensorflow.org/guide/saved_model) is recommended and is the default option. Use the argument `--export_dir` to set the directory where the files should be saved.
+For The application in the cloud, TensorFlow's [SavedModel](https://www.tensorflow.org/guide/saved_model) is recommended and is the default option. Use the argument `--export_dir` to set the directory where the model should be saved.
 
 ```bash
 # From the repo's root directory
@@ -73,7 +73,7 @@ python3 landmark.py \
 
 ### For PC/Mobile/Embedded
 
-These applications tend to do inference locally which means the input function should take raw tensors as input instead of encoded image strings. Use the argument `--raw_input` while exporting the model.
+These applications tend to do inference locally which means the input function should take raw tensors as input instead of encoded image strings. Use the argument `--raw_input` when exporting the model.
 
 ```bash
 # From the repo's root directory
@@ -85,7 +85,7 @@ python3 landmark.py \
     --raw_input True
 ```
 
-The model will also be exported in the `SavedModel` format and is sufficient for inference locally. In cade you want the model could be 'freezed' into a single GraphDef 'pb' file with the help of TensorFlow's official python tools. The tools can be found in the [official repository](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/freeze_graph.py).
+The model will also be exported in the `SavedModel` format and is sufficient for inference locally. In case you want, the model could be 'freezed' into a single GraphDef 'pb' file with the help of TensorFlow's official python tools, which can be found in the [official repository](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/freeze_graph.py).
 
 ```
 python3 freeze_graph.py \
