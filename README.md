@@ -104,6 +104,16 @@ If you are using TensorFlow Serving in the cloud, the exported SavedModel could 
 For local applications, [butterfly](https://github.com/yinguobing/butterfly) is a lightweight python module that is designed for frozen model and you can find a demo project demonstrating how to do inference with image and video/webcam.
 
 
+## Where to go next?
+
+There are many means to optimize this project and here are some tips I thought might be useful.
+
+- Add batch norm layers in the current network.
+- Use a different model.
+- Introduce a new loss fucntion.
+- Any thing you like, play with it!
+
+
 ## Contributing
 
 Please read [CONTRIBUTING.md]() for details on our code of conduct, and the process for submitting pull requests to us.
