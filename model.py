@@ -84,12 +84,6 @@ class LandmarkModel(keras.Model):
         Args:
             inputs: input of the network.
         """
-        # |== Layer 0: input layer ==|
-
-        # Input feature x should be of shape (batch_size, image_width, image_height,
-        # color_channels). As we will directly using the decoded image tensor of
-        # data type int8, a convertion should be performed.
-        inputs = tf.cast(inputs, tf.float32)
 
         # |== Layer 1 ==|
         inputs = self.conv_1(inputs)
