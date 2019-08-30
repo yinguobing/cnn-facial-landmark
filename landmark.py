@@ -22,8 +22,8 @@ parser.add_argument('--export_dir', default=None, type=str,
                     help='directory to export the saved model')
 parser.add_argument('--train_steps', default=1000, type=int,
                     help='training steps')
-parser.add_argument('--num_epochs', default=None, type=int,
-                    help='epochs of training dataset')
+parser.add_argument('--epochs', default=None, type=int,
+                    help='epochs for training')
 parser.add_argument('--batch_size', default=16, type=int,
                     help='training batch size')
 parser.add_argument('--raw_input', default=False, type=bool,
@@ -155,12 +155,12 @@ def run():
     # Get the training data ready.
     dataset = get_parsed_dataset(record_file=args.train_record,
                                  batch_size=args.batch_size,
-                                 num_epochs=args.num_epochs,
+                                 num_epochs=args.epochs,
                                  shuffle=True)
 
     # Train.
     print('Starting to train.')
-    train_history = mark_model.fit(dataset, epochs=args.num_epochs)
+    train_history = mark_model.fit(dataset)
 
     # Do evaluation after training.
     print('Starting to evaluate.')
