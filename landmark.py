@@ -138,6 +138,7 @@ def run():
                                    epochs=args.epochs,
                                    steps_per_epoch=args.train_steps,
                                    callbacks=callbacks)
+    print(train_history)
 
     # Do evaluation after training.
     print('Starting to evaluate.')
