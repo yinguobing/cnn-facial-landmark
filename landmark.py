@@ -60,10 +60,10 @@ def get_compiled_model(output_size):
     return model
 
 
-def _parse_function(record):
+def _parse(example):
     """Extract data from a `tf.Example` protocol buffer.
     Args:
-        record: a protobuf example.
+        example: a protobuf example.
 
     Returns:
         a parsed data and label pair.
@@ -74,7 +74,7 @@ def _parse_function(record):
         'image/encoded': tf.io.FixedLenFeature([], tf.string),
         'label/marks': tf.io.FixedLenFeature([136], tf.float32),
     }
-    parsed_features = tf.io.parse_single_example(record, keys_to_features)
+    parsed_features = tf.io.parse_single_example(example, keys_to_features)
 
     # Extract features from single example
     image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
@@ -85,10 +85,18 @@ def _parse_function(record):
     return image_reshaped, points
 
 
-def get_parsed_dataset(record_file, batch_size, num_epochs=None, shuffle=True):
+def get_parsed_dataset(record_file, batch_size, epochs=None, shuffle=True):
+    """Return a parsed dataset for model.
+    Args:
+        record_file: the TFRecord file.
+        batch_size: batch size.
+        epochs: epochs of dataset.
+        shuffle: whether to shuffle the data.
+
+    Returns:
+        a parsed dataset.
     """
-    Return a parsed dataset for model.
-    """
+    # Init the dataset from the TFRecord file.
     dataset = tf.data.TFRecordDataset(record_file)
 
     # Use `Dataset.map()` to build a pair of a feature dictionary and a label
@@ -96,54 +104,12 @@ def get_parsed_dataset(record_file, batch_size, num_epochs=None, shuffle=True):
     if shuffle is True:
         dataset = dataset.shuffle(buffer_size=10000)
     dataset = dataset.map(
-        _parse_function, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        _parse, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     dataset = dataset.batch(batch_size)
-    dataset = dataset.repeat(num_epochs)
+    dataset = dataset.repeat(epochs)
     dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
     return dataset
-
-
-def serving_input_receiver_fn():
-    """An input function for TensorFlow Serving."""
-
-    def _preprocess_image(image_bytes):
-        """Preprocess a single raw image."""
-        image = tf.image.decode_jpeg(image_bytes, channels=IMG_CHANNEL)
-        image.set_shape((None, None, IMG_CHANNEL))
-        image = tf.image.resize_images(image, [IMG_HEIGHT, IMG_WIDTH],
-                                       method=tf.image.ResizeMethod.BILINEAR,
-                                       align_corners=False)
-        return image
-    image_bytes_list = tf.compat.v1.placeholder(
-        shape=[None], dtype=tf.string,
-        name='encoded_image_string_tensor')
-    image = tf.map_fn(_preprocess_image, image_bytes_list,
-                      dtype=tf.float32, back_prop=False)
-
-    return tf.estimator.export.TensorServingInputReceiver(
-        features=image,
-        receiver_tensors={'image_bytes': image_bytes_list})
-
-
-def tensor_input_receiver_fn():
-    """An input function accept raw tensors."""
-    def _preprocess_image(image_tensor):
-        """Preprocess a single raw image tensor."""
-        image = tf.image.resize_images(image_tensor, [IMG_HEIGHT, IMG_WIDTH],
-                                       method=tf.image.ResizeMethod.BILINEAR,
-                                       align_corners=False)
-        return image
-
-    image_tensor = tf.compat.v1.placeholder(
-        shape=[None, None, None, 3], dtype=tf.uint8,
-        name='image_tensor')
-    image = tf.map_fn(_preprocess_image, image_tensor,
-                      dtype=tf.float32, back_prop=False)
-
-    return tf.estimator.export.TensorServingInputReceiver(
-        features=image,
-        receiver_tensors={'image': image_tensor})
 
 
 def run():
@@ -155,7 +121,7 @@ def run():
     # Get the training data ready.
     dataset = get_parsed_dataset(record_file=args.train_record,
                                  batch_size=args.batch_size,
-                                 num_epochs=args.epochs,
+                                 epochs=args.epochs,
                                  shuffle=True)
 
     # Train.
