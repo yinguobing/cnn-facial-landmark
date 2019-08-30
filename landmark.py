@@ -16,8 +16,10 @@ parser.add_argument('--train_record', default='train.record', type=str,
                     help='Training record file')
 parser.add_argument('--val_record', default='validation.record', type=str,
                     help='validation record file')
-parser.add_argument('--model_dir', default='train', type=str,
+parser.add_argument('--model_dir', default='./train', type=str,
                     help='training model directory')
+parser.add_argument('--log', default='./log', type=str,
+                    help='training log directory')
 parser.add_argument('--export_dir', default=None, type=str,
                     help='directory to export the saved model')
 parser.add_argument('--train_steps', default=1000, type=int,
@@ -124,9 +126,18 @@ def run():
                                  epochs=args.epochs,
                                  shuffle=True)
 
+    # To save and log the training process, we need some callbacks.
+    callbacks = [keras.callbacks.TensorBoard(log_dir=args.log, update_freq=1024),
+                 keras.callbacks.ModelCheckpoint(filepath=args.model_dir,
+                                                 monitor='loss',
+                                                 save_freq=4096)]
+
     # Train.
     print('Starting to train.')
-    train_history = mark_model.fit(dataset)
+    train_history = mark_model.fit(dataset,
+                                   epochs=args.epochs,
+                                   steps_per_epoch=args.train_steps,
+                                   callbacks=callbacks)
 
     # Do evaluation after training.
     print('Starting to evaluate.')
