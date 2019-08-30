@@ -119,3 +119,10 @@ class LandmarkModel(keras.Model):
         inputs = self.dense_2(inputs)
 
         return inputs
+
+    def compute_output_shape(self, input_shape):
+        # Override this function to use the subclassed model as part of a
+        # functional-style model.
+        shape = tf.TensorShape(input_shape).as_list()
+        shape[-1] = self.output_size
+        return tf.TensorShape(shape)
