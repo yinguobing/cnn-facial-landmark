@@ -1,163 +1,121 @@
+"""This module provides the class implimentation of the network."""
 import tensorflow as tf
+from tensorflow import keras
 
 
-class LandmarkModel(object):
+class LandmarkModel(keras.Model):
+
     def __init__(self, output_size):
+        super(LandmarkModel, self).__init__(name='landmark_model')
+
+        # The model may take variable number of landmarks.
         self.output_size = output_size
 
-    def __call__(self, input_tensor):
+        # The model is composed of multiple layers that best be defined in the
+        # init function.
+
+        # Convolutional layers.
+        self.conv_1 = keras.layers.Conv2D(filters=32,
+                                          kernel_size=(3, 3),
+                                          activation='relu')
+        self.conv_2 = keras.layers.Conv2D(filters=64,
+                                          kernel_size=(3, 3),
+                                          strides=(1, 1),
+                                          padding='valid',
+                                          activation='relu')
+        self.conv_3 = keras.layers.Conv2D(filters=64,
+                                          kernel_size=(3, 3),
+                                          strides=(1, 1),
+                                          padding='valid',
+                                          activation=tf.nn.relu)
+        self.conv_4 = keras.layers.Conv2D(filters=64,
+                                          kernel_size=(3, 3),
+                                          strides=(1, 1),
+                                          padding='valid',
+                                          activation='relu')
+        self.conv_5 = keras.layers.Conv2D(filters=64,
+                                          kernel_size=[3, 3],
+                                          strides=(1, 1),
+                                          padding='valid',
+                                          activation='relu')
+        self.conv_6 = keras.layers.Conv2D(filters=128,
+                                          kernel_size=(3, 3),
+                                          strides=(1, 1),
+                                          padding='valid',
+                                          activation='relu')
+        self.conv_7 = keras.layers.Conv2D(filters=128,
+                                          kernel_size=[3, 3],
+                                          strides=(1, 1),
+                                          padding='valid',
+                                          activation='relu')
+        self.conv_8 = keras.layers.Conv2D(filters=256,
+                                          kernel_size=[3, 3],
+                                          strides=(1, 1),
+                                          padding='valid',
+                                          activation='relu')
+
+        # Pooling layers.
+        self.pool_1 = keras.layers.MaxPool2D(pool_size=(2, 2),
+                                             strides=(2, 2),
+                                             padding='valid')
+        self.pool_2 = keras.layers.MaxPool2D(pool_size=(2, 2),
+                                             strides=(2, 2),
+                                             padding='valid')
+        self.pool_3 = keras.layers.MaxPool2D(pool_size=(2, 2),
+                                             strides=(2, 2),
+                                             padding='valid')
+        self.pool_4 = keras.layers.MaxPool2D(pool_size=[2, 2],
+                                             strides=(1, 1),
+                                             padding='valid')
+
+        # Dense layers.
+        self.dense_1 = keras.layers.Dense(units=1024,
+                                          activation='relu',
+                                          use_bias=True)
+        self.dense_2 = keras.layers.Dense(units=self.output_size,
+                                          activation=None,
+                                          use_bias=True)
+
+        # Flatten layers.
+        self.flatten_1 = keras.layers.Flatten()
+
+    def call(self, inputs):
+        """Network forward definition. Using the layers defined in the `__init__`
+        Args:
+            inputs: input of the network.
+        """
         # |== Layer 0: input layer ==|
+
         # Input feature x should be of shape (batch_size, image_width, image_height,
         # color_channels). As we will directly using the decoded image tensor of
         # data type int8, a convertion should be performed.
-        inputs = tf.cast(input_tensor, tf.float32)
+        inputs = tf.cast(inputs, tf.float32)
 
         # |== Layer 1 ==|
-
-        with tf.variable_scope('layer1'):
-            # Convolutional layer.
-            # Computes 32 features using a 3x3 filter with ReLU activation.
-            conv1 = tf.layers.conv2d(
-                inputs=inputs,
-                filters=32,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
-
-            # Pooling layer.
-            # First max pooling layer with a 2x2 filter and stride of 2.
-            pool1 = tf.layers.max_pooling2d(
-                inputs=conv1,
-                pool_size=[2, 2],
-                strides=(2, 2),
-                padding='valid')
+        inputs = self.conv_1(inputs)
+        inputs = self.pool_1(inputs)
 
         # |== Layer 2 ==|
-
-        with tf.variable_scope('layer2'):
-            # Convolutional layer
-            # Computes 64 features using a 3x3 filter with ReLU activation.
-            conv2 = tf.layers.conv2d(
-                inputs=pool1,
-                filters=64,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
-
-            # Convolutional layer
-            # Computes 64 features using a 3x3 filter with ReLU activation.
-            conv3 = tf.layers.conv2d(
-                inputs=conv2,
-                filters=64,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
-
-            # Pooling layer
-            # Second max pooling layer with a 2x2 filter and stride of 2.
-            pool2 = tf.layers.max_pooling2d(
-                inputs=conv3,
-                pool_size=[2, 2],
-                strides=(2, 2),
-                padding='valid')
+        inputs = self.conv_2(inputs)
+        inputs = self.conv_3(inputs)
+        inputs = self.pool_2(inputs)
 
         # |== Layer 3 ==|
-
-        with tf.variable_scope('layer3'):
-            # Convolutional layer
-            # Computes 64 features using a 3x3 filter with ReLU activation.
-            conv4 = tf.layers.conv2d(
-                inputs=pool2,
-                filters=64,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
-
-            # Convolutional layer
-            # Computes 64 features using a 3x3 filter with ReLU activation.
-            conv5 = tf.layers.conv2d(
-                inputs=conv4,
-                filters=64,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
-
-            # Pooling layer
-            # Third max pooling layer with a 2x2 filter and stride of 2.
-            pool3 = tf.layers.max_pooling2d(
-                inputs=conv5,
-                pool_size=[2, 2],
-                strides=(2, 2),
-                padding='valid')
+        inputs = self.conv_4(inputs)
+        inputs = self.conv_5(inputs)
+        inputs = self.pool_3(inputs)
 
         # |== Layer 4 ==|
-
-        with tf.variable_scope('layer4'):
-            # Convolutional layer
-            # Computes 128 features using a 3x3 filter with ReLU activation.
-            conv6 = tf.layers.conv2d(
-                inputs=pool3,
-                filters=128,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
-
-            # Convolutional layer
-            # Computes 128 features using a 3x3 filter with ReLU activation.
-            conv7 = tf.layers.conv2d(
-                inputs=conv6,
-                filters=128,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
-
-            # Pooling layer
-            # Fourth max pooling layer with a 2x2 filter and stride of 2.
-            pool4 = tf.layers.max_pooling2d(
-                inputs=conv7,
-                pool_size=[2, 2],
-                strides=(1, 1),
-                padding='valid')
+        inputs = self.conv_6(inputs)
+        inputs = self.conv_7(inputs)
+        inputs = self.pool_4(inputs)
 
         # |== Layer 5 ==|
-
-        with tf.variable_scope('layer5'):
-            # Convolutional layer
-            conv8 = tf.layers.conv2d(
-                inputs=pool4,
-                filters=256,
-                kernel_size=[3, 3],
-                strides=(1, 1),
-                padding='valid',
-                activation=tf.nn.relu)
+        inputs = self.conv_8(inputs)
 
         # |== Layer 6 ==|
+        inputs = self.flatten_1(inputs)
+        inputs = self.dense_1(inputs)
+        inputs = self.dense_2(inputs)
 
-        with tf.variable_scope('layer6'):
-            # Flatten tensor into a batch of vectors
-            flatten = tf.layers.flatten(inputs=conv8)
-
-            # Dense layer 1, a fully connected layer.
-            dense1 = tf.layers.dense(
-                inputs=flatten,
-                units=1024,
-                activation=tf.nn.relu,
-                use_bias=True)
-
-            # Dense layer 2, also known as the output layer.
-            logits = tf.layers.dense(
-                inputs=dense1,
-                units=self.output_size,
-                activation=None,
-                use_bias=True,
-                name="logits")
-            logits = tf.identity(logits, 'final_dense')
-
-        return logits
+        return inputs
