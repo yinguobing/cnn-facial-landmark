@@ -6,6 +6,7 @@ import argparse
 import cv2
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
 from model import LandmarkModel
 
@@ -27,6 +28,7 @@ parser.add_argument('--batch_size', default=16, type=int,
                     help='training batch size')
 parser.add_argument('--raw_input', default=False, type=bool,
                     help='Use raw tensor as model input.')
+args = parser.parse_args()
 
 
 # CAUTION: The image width, height and channels should be consist with your
@@ -36,75 +38,43 @@ IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNEL = 3
 
+# The number of facial landmarks the model should output. By default the mark is
+# in 2D space.
+MARK_SIZE = 68
 
-def cnn_model_fn(features, labels, mode):
-    """
-    The model function for the network.
+
+def get_compiled_model(output_size):
+    """Return a compiled landmark model.
+    Args:
+        output_size: the total number of landmarks coordinates (x + y).
+
+    Returns:
+        a compiled keras model.
     """
     # Construct the network.
-    model = LandmarkModel(output_size=68*2)
-    logits = model(features)
+    model = LandmarkModel(output_size)
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
+                  loss=keras.losses.mean_squared_error,
+                  metrics=[keras.metrics.mean_squared_error])
 
-    # Make prediction for PREDICATION mode.
-    predictions = logits
-    if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(
-            mode=mode,
-            predictions=predictions,
-            export_outputs={
-                'predict': tf.estimator.export.PredictOutput(predictions)
-            })
-
-    # Calculate loss using mean squared error.
-    loss = tf.losses.mean_squared_error(labels=labels, predictions=predictions)
-
-    # Create a tensor logging purposes.
-    tf.identity(loss, name='loss')
-    tf.summary.scalar('loss', loss)
-
-    # Configure the train OP for TRAIN mode.
-    if mode == tf.estimator.ModeKeys.TRAIN:
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
-
-        train_op = optimizer.minimize(
-            loss=loss,
-            global_step=tf.train.get_global_step())
-    else:
-        train_op = None
-
-    # Create a metric.
-    rmse_metrics = tf.metrics.root_mean_squared_error(
-        labels=labels,
-        predictions=predictions)
-    metrics = {'eval_mse': rmse_metrics}
-
-    # A tensor for metric logging
-    tf.identity(rmse_metrics[1], name='root_mean_squared_error')
-    tf.summary.scalar('root_mean_squared_error', rmse_metrics[1])
-
-    # Generate a summary node for the images
-    tf.summary.image('images', features, max_outputs=6)
-
-    return tf.estimator.EstimatorSpec(
-        mode=mode,
-        predictions=predictions,
-        loss=loss,
-        train_op=train_op,
-        eval_metric_ops=metrics
-    )
+    return model
 
 
 def _parse_function(record):
-    """
-    Extract data from a `tf.Example` protocol buffer.
+    """Extract data from a `tf.Example` protocol buffer.
+    Args:
+        record: a protobuf example.
+
+    Returns:
+        a parsed data and label pair.
     """
     # Defaults are not specified since both keys are required.
     keys_to_features = {
-        'image/filename': tf.FixedLenFeature([], tf.string),
-        'image/encoded': tf.FixedLenFeature([], tf.string),
-        'label/marks': tf.FixedLenFeature([136], tf.float32),
+        'image/filename': tf.io.FixedLenFeature([], tf.string),
+        'image/encoded': tf.io.FixedLenFeature([], tf.string),
+        'label/marks': tf.io.FixedLenFeature([136], tf.float32),
     }
-    parsed_features = tf.parse_single_example(record, keys_to_features)
+    parsed_features = tf.io.parse_single_example(record, keys_to_features)
 
     # Extract features from single example
     image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
@@ -115,26 +85,23 @@ def _parse_function(record):
     return image_reshaped, points
 
 
-def input_fn(record_file, batch_size, num_epochs=None, shuffle=True):
+def get_parsed_dataset(record_file, batch_size, num_epochs=None, shuffle=True):
     """
-    Input function required for TensorFlow Estimator.
+    Return a parsed dataset for model.
     """
     dataset = tf.data.TFRecordDataset(record_file)
 
     # Use `Dataset.map()` to build a pair of a feature dictionary and a label
     # tensor for each example.
-    dataset = dataset.map(_parse_function)
     if shuffle is True:
         dataset = dataset.shuffle(buffer_size=10000)
+    dataset = dataset.map(
+        _parse_function, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     dataset = dataset.batch(batch_size)
     dataset = dataset.repeat(num_epochs)
+    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
-    # Make dataset iterator.
-    iterator = dataset.make_one_shot_iterator()
-
-    # Return the feature and label.
-    image, label = iterator.get_next()
-    return image, label
+    return dataset
 
 
 def serving_input_receiver_fn():
@@ -179,39 +146,29 @@ def tensor_input_receiver_fn():
         receiver_tensors={'image': image_tensor})
 
 
-def main(unused_argv):
+def run():
     """Train, eval and export the model."""
-    # Parse the arguments.
-    args = parser.parse_args(unused_argv[1:])
 
-    # Create the Estimator
-    estimator = tf.estimator.Estimator(
-        model_fn=cnn_model_fn, model_dir=args.model_dir)
+    # Create the Model
+    mark_model = get_compiled_model(MARK_SIZE*2)
 
-    # Train for N steps.
-    tf.logging.info('Starting to train.')
-    estimator.train(
-        input_fn=lambda: input_fn(record_file=args.train_record,
-                                  batch_size=args.batch_size,
-                                  num_epochs=args.num_epochs,
-                                  shuffle=True),
-        steps=args.train_steps)
+    # Get the training data ready.
+    dataset = get_parsed_dataset(record_file=args.train_record,
+                                 batch_size=args.batch_size,
+                                 num_epochs=args.num_epochs,
+                                 shuffle=True)
+
+    # Train.
+    print('Starting to train.')
+    train_history = mark_model.fit(dataset, epochs=args.num_epochs)
 
     # Do evaluation after training.
-    tf.logging.info('Starting to evaluate.')
-    evaluation = estimator.evaluate(
-        input_fn=lambda: input_fn(record_file=args.val_record,
-                                  batch_size=1,
-                                  num_epochs=1,
-                                  shuffle=False))
+    print('Starting to evaluate.')
+    evaluation = mark_model.evaluate(dataset)
     print(evaluation)
 
-    # Export trained model as SavedModel.
-    receiver_fn = tensor_input_receiver_fn if args.raw_input else serving_input_receiver_fn
-    if args.export_dir is not None:
-        estimator.export_savedmodel(args.export_dir, receiver_fn)
+    mark_model.summary()
 
 
 if __name__ == '__main__':
-    tf.logging.set_verbosity(tf.logging.INFO)
-    tf.app.run(main)
+    run()
