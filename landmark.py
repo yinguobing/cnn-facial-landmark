@@ -121,10 +121,10 @@ def run():
     mark_model = get_compiled_model(MARK_SIZE*2)
 
     # Get the training data ready.
-    dataset = get_parsed_dataset(record_file=args.train_record,
-                                 batch_size=args.batch_size,
-                                 epochs=args.epochs,
-                                 shuffle=True)
+    train_dataset = get_parsed_dataset(record_file=args.train_record,
+                                       batch_size=args.batch_size,
+                                       epochs=args.epochs,
+                                       shuffle=True)
 
     # To save and log the training process, we need some callbacks.
     callbacks = [keras.callbacks.TensorBoard(log_dir=args.log, update_freq=1024),
@@ -134,17 +134,19 @@ def run():
 
     # Train.
     print('Starting to train.')
-    train_history = mark_model.fit(dataset,
+    train_history = mark_model.fit(train_dataset,
                                    epochs=args.epochs,
                                    steps_per_epoch=args.train_steps,
                                    callbacks=callbacks)
 
     # Do evaluation after training.
     print('Starting to evaluate.')
-    evaluation = mark_model.evaluate(dataset)
+    eval_dataset = get_parsed_dataset(record_file=args.val_record,
+                                      batch_size=args.batch_size,
+                                      epochs=1,
+                                      shuffle=False)
+    evaluation = mark_model.evaluate(eval_dataset)
     print(evaluation)
-
-    mark_model.summary()
 
 
 if __name__ == '__main__':
