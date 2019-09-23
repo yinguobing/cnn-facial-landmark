@@ -6,7 +6,7 @@ The model is build with TensorFlow, the training code is provided so you can tra
 
 A sample gif extracted from video file showing the detection result.
 
-![](https://github.com/yinguobing/cnn-facial-landmark/blob/master/demo01.gif)
+![](doc/demo01.gif)
 
 This is the companion code for the tutorial on deep learning [here](https://yinguobing.com/facial-landmark-localization-by-deep-learning-background/), which includes background, dataset, preprocessing, model architecture, training and deployment. I tried my best to make them simple and easy to understand for beginners. Feel free to open issue when you are stuck or have some wonderful ideas to share.
 
@@ -123,6 +123,8 @@ Please read [CONTRIBUTING.md]() for details on our code of conduct, and the proc
 
 Yin Guobing (尹国冰) - [yinguobing](https://github.com/yinguobing/)
 
+![](doc/wechat_logo.png)
+
 
 ## License
 
@@ -130,7 +132,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* The TensorFlow official tutorial.
+* The TensorFlow team for their comprehensive tutorial.
+* The iBUG team for their public dataset.
 
 ## Changelog
 
