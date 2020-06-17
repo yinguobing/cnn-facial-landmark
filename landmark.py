@@ -30,6 +30,8 @@ parser.add_argument('--batch_size', default=16, type=int,
                     help='training batch size')
 parser.add_argument('--raw_input', default=False, type=bool,
                     help='Use raw tensor as model input.')
+parser.add_argument('--eval_only', default=False, type=bool,
+                    help='Do evaluation without training.')
 args = parser.parse_args()
 
 
@@ -82,9 +84,10 @@ def _parse(example):
     image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
     image_reshaped = tf.reshape(
         image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
+    image_float = tf.cast(image_reshaped, tf.float32)
     points = tf.cast(parsed_features['label/marks'], tf.float32)
 
-    return image_reshaped, points
+    return image_float, points
 
 
 def get_parsed_dataset(record_file, batch_size, epochs=None, shuffle=True):
@@ -133,12 +136,12 @@ def run():
                                                  save_freq=4096)]
 
     # Train.
-    print('Starting to train.')
-    train_history = mark_model.fit(train_dataset,
-                                   epochs=args.epochs,
-                                   steps_per_epoch=args.train_steps,
-                                   callbacks=callbacks)
-    print(train_history)
+    if not args.eval_only:
+        print('Starting to train.')
+        train_history = mark_model.fit(train_dataset,
+                                       epochs=args.epochs,
+                                       steps_per_epoch=args.train_steps,
+                                       callbacks=callbacks)
 
     # Do evaluation after training.
     print('Starting to evaluate.')
@@ -148,6 +151,11 @@ def run():
                                       shuffle=False)
     evaluation = mark_model.evaluate(eval_dataset)
     print(evaluation)
+
+    # Save the model.
+    if args.export_dir:
+        print("Saving model to {}".format(args.export_dir))
+        mark_model.save(args.export_dir, save_format='tf')
 
 
 if __name__ == '__main__':
