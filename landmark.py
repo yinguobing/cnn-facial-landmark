@@ -10,7 +10,9 @@ from tensorflow import keras
 
 from model import LandmarkModel
 
-# Add arguments parser to accept user specified arguments.
+# The entire process includes training, evaluation and exporting, which are not
+# always excuted one by one. Add arguments parser to give user the flexiblity to
+# tune the process.
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_record', default='train.record', type=str,
                     help='Training record file')
@@ -28,8 +30,8 @@ parser.add_argument('--epochs', default=None, type=int,
                     help='epochs for training')
 parser.add_argument('--batch_size', default=16, type=int,
                     help='training batch size')
-parser.add_argument('--raw_input', default=False, type=bool,
-                    help='Use raw tensor as model input.')
+parser.add_argument('--export_only', default=False, type=bool,
+                    help='Save the model without training and evaluation.')
 parser.add_argument('--eval_only', default=False, type=bool,
                     help='Do evaluation without training.')
 args = parser.parse_args()
@@ -123,12 +125,6 @@ def run():
     # Create the Model
     mark_model = get_compiled_model(MARK_SIZE*2)
 
-    # Get the training data ready.
-    train_dataset = get_parsed_dataset(record_file=args.train_record,
-                                       batch_size=args.batch_size,
-                                       epochs=args.epochs,
-                                       shuffle=True)
-
     # To save and log the training process, we need some callbacks.
     callbacks = [keras.callbacks.TensorBoard(log_dir=args.log, update_freq=1024),
                  keras.callbacks.ModelCheckpoint(filepath=args.model_dir,
@@ -136,25 +132,31 @@ def run():
                                                  save_freq=4096)]
 
     # Train.
-    if not args.eval_only:
+    if not args.export_only and not args.eval_only:
+        # Get the training data ready.
+        train_dataset = get_parsed_dataset(record_file=args.train_record,
+                                           batch_size=args.batch_size,
+                                           epochs=args.epochs,
+                                           shuffle=True)
         print('Starting to train.')
-        train_history = mark_model.fit(train_dataset,
-                                       epochs=args.epochs,
-                                       steps_per_epoch=args.train_steps,
-                                       callbacks=callbacks)
+        _ = mark_model.fit(train_dataset,
+                           epochs=args.epochs,
+                           steps_per_epoch=args.train_steps,
+                           callbacks=callbacks)
 
-    # Do evaluation after training.
-    print('Starting to evaluate.')
-    eval_dataset = get_parsed_dataset(record_file=args.val_record,
-                                      batch_size=args.batch_size,
-                                      epochs=1,
-                                      shuffle=False)
-    evaluation = mark_model.evaluate(eval_dataset)
-    print(evaluation)
+    # Evaluate.
+    if not args.export_only:
+        print('Starting to evaluate.')
+        eval_dataset = get_parsed_dataset(record_file=args.val_record,
+                                          batch_size=args.batch_size,
+                                          epochs=1,
+                                          shuffle=False)
+        evaluation = mark_model.evaluate(eval_dataset)
+        print(evaluation)
 
     # Save the model.
     if args.export_dir:
-        print("Saving model to {}".format(args.export_dir))
+        print("Saving model to directory: {}".format(args.export_dir))
         mark_model.save(args.export_dir, save_format='tf')
 
 
