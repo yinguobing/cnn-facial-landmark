@@ -102,3 +102,7 @@ ENV/
 
 # TF training
 train
+log
+
+# editor
+.vscode
