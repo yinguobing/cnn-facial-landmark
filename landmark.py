@@ -26,7 +26,7 @@ parser.add_argument('--export_dir', default=None, type=str,
                     help='directory to export the saved model')
 parser.add_argument('--train_steps', default=1000, type=int,
                     help='training steps')
-parser.add_argument('--epochs', default=None, type=int,
+parser.add_argument('--epochs', default=1, type=int,
                     help='epochs for training')
 parser.add_argument('--batch_size', default=16, type=int,
                     help='training batch size')
