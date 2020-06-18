@@ -11,8 +11,8 @@ from tensorflow import keras
 from model import LandmarkModel
 
 # The entire process includes training, evaluation and exporting, which are not
-# always excuted one by one. Add arguments parser to give user the flexiblity to
-# tune the process.
+# always executed one by one. Add arguments parser to give user the flexibility 
+# to tune the process.
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_record', default='train.record', type=str,
                     help='Training record file')
