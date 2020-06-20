@@ -20,12 +20,7 @@ These instructions will get you a copy of the project up and running on your loc
 TensorFlow
 
 ```bash
-# For CPU
 python3 -m pip install tensorflow
-
-# or, if you have a CUDA compatible GPU
-python3 -m pip install tensorflow-gpu
-
 ```
 
 ### Installing
@@ -65,23 +60,21 @@ For The application in the cloud, TensorFlow's [SavedModel](https://www.tensorfl
 ```bash
 # From the repo's root directory
 python3 landmark.py \
-    --val_record validation.record \
     --model_dir train \
     --export_dir saved_model \
-    --eval_only True
+    --export_only True
 ```
 
-### For PC/Mobile/Embedded
+### For PC/Mobile/Embedded *(To be updated)*
 
 These applications tend to do inference locally which means the input function should take raw tensors as input instead of encoded image strings. Use the argument `--raw_input` when exporting the model.
 
 ```bash
 # From the repo's root directory
 python3 landmark.py \
-    --val_record validation.record \
     --model_dir train \
     --export_dir saved_model \
-    --eval_only True \
+    --export_only True \
     --raw_input True
 ```
 
@@ -135,6 +128,9 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * The TensorFlow official tutorial.
 
 ## Changelog
+
+### Update 2020-06-20
+Making `Keras`  the default way of building models.
 
 ### Update 2019-08-08
 A new input function is added to export the model to take raw tensor input. Use the `--raw_input` argument in the exporting command. This is useful if you want to "freeze" the model later.
