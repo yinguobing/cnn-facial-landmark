@@ -125,7 +125,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* The TensorFlow official tutorial.
+* The TensorFlow team for their comprehensive tutorial.
+* The iBUG team for their public dataset.
 
 ## Changelog
 
