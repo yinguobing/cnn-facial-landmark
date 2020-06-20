@@ -1,3 +1,6 @@
+
+![TensorFlow](https://img.shields.io/badge/TensorFlow-v2.2-brightgreen)
+
 # cnn-facial-landmark
 
 Facial landmark detection based on convolution neural network.
@@ -121,7 +124,7 @@ Yin Guobing (尹国冰) - [yinguobing](https://github.com/yinguobing/)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+![GitHub](https://img.shields.io/github/license/yinguobing/cnn-facial-landmark)
 
 ## Acknowledgments
 
