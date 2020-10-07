@@ -11,7 +11,7 @@ from tensorflow import keras
 from model import LandmarkModel
 
 # The entire process includes training, evaluation and exporting, which are not
-# always executed one by one. Add arguments parser to give user the flexibility 
+# always executed one by one. Add arguments parser to give user the flexibility
 # to tune the process.
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_record', default='train.record', type=str,
@@ -24,8 +24,6 @@ parser.add_argument('--log', default='./log', type=str,
                     help='training log directory')
 parser.add_argument('--export_dir', default=None, type=str,
                     help='directory to export the saved model')
-parser.add_argument('--train_steps', default=1000, type=int,
-                    help='training steps')
 parser.add_argument('--epochs', default=1, type=int,
                     help='epochs for training')
 parser.add_argument('--batch_size', default=16, type=int,
@@ -141,7 +139,6 @@ def run():
         print('Starting to train.')
         _ = mark_model.fit(train_dataset,
                            epochs=args.epochs,
-                           steps_per_epoch=args.train_steps,
                            callbacks=callbacks)
 
     # Evaluate.
