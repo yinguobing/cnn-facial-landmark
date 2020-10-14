@@ -107,7 +107,12 @@ There are many means to optimize this project and here are some tips I thought m
 - Add batch norm layers in the current network.
 - Use a different model.
 - Introduce a new loss fucntion.
+- Data augmentation.
 - Any thing you like, play with it!
+
+Also, there is another repo for landmark detection which is more advanced. It's a TensorFlow implementation of [HRNet](https://arxiv.org/pdf/1908.07919.pdf). Check it out if you are interested.
+
+https://github.com/yinguobing/facial-landmark-detection-hrnet
 
 
 ## Contributing
