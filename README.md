@@ -1,6 +1,4 @@
 
-![TensorFlow](https://img.shields.io/badge/TensorFlow-v2.2-brightgreen)
-
 # cnn-facial-landmark
 
 Facial landmark detection based on convolution neural network.
@@ -20,11 +18,9 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-TensorFlow
-
-```bash
-python3 -m pip install tensorflow
-```
+![TensorFlow](https://img.shields.io/badge/TensorFlow-v2.3-brightgreen)
+![OpenCV](https://img.shields.io/badge/OpenCV-v4.3-brightgreen)
+![Numpy](https://img.shields.io/badge/Numpy-v1.17-brightgreen)
 
 ### Installing
 
@@ -56,9 +52,9 @@ python3 landmark.py \
 
 ## Export
 
-### For cloud applications
+### For PC/Cloud applications
 
-For The application in the cloud, TensorFlow's [SavedModel](https://www.tensorflow.org/guide/saved_model) is recommended and is the default option. Use the argument `--export_dir` to set the directory where the model should be saved.
+TensorFlow's [SavedModel](https://www.tensorflow.org/guide/saved_model) is recommended and is the default option. Use the argument `--export_dir` to set the directory where the model should be saved.
 
 ```bash
 # From the repo's root directory
@@ -68,37 +64,9 @@ python3 landmark.py \
     --export_only True
 ```
 
-### For PC/Mobile/Embedded *(To be updated)*
+### For Mobile/Embedded/IoT devices
 
-These applications tend to do inference locally which means the input function should take raw tensors as input instead of encoded image strings. Use the argument `--raw_input` when exporting the model.
-
-```bash
-# From the repo's root directory
-python3 landmark.py \
-    --model_dir train \
-    --export_dir saved_model \
-    --export_only True \
-    --raw_input True
-```
-
-The model will also be exported in the `SavedModel` format and is sufficient for inference locally. In case you want, the model could be 'freezed' into a single GraphDef 'pb' file with the help of TensorFlow's official python tools, which can be found in the [official repository](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/freeze_graph.py).
-
-```
-python3 freeze_graph.py \
-    --input_saved_model_dir /path/to/saved_model \
-    --output_node_names logits \
-    --output_graph frozen_graph.pb
-```
-
-This tool requires known output node names that you can find in the TensorBoard graph page if the training files are available. Don't worry if the training files are gone. These names could also be retrieved from the SavedModel files. Check out this gist: [import_savedmodel_to_tensorboard.py](https://gist.github.com/yinguobing/8a283724cf892f1e6d0937dc0938b99c)
-
-
-## Inference
-
-If you are using TensorFlow Serving in the cloud, the exported SavedModel could be imported directly.
-
-For local applications, [butterfly](https://github.com/yinguobing/butterfly) is a lightweight python module that is designed for frozen model and you can find a demo project demonstrating how to do inference with image and video/webcam.
-
+These devices tend to have constrained resource and TensorFlow Lite is most suitable for this situation. However this is beyond the scope of this project. But don't worry, you will find a more comprehensive project in the next section.
 
 ## Where to go next?
 
@@ -112,11 +80,6 @@ Once you have accomplished all the applications above, it's a good time to move 
 Watch this video demo: [HRNet Facial Landmark Detection (bilibili)](https://www.bilibili.com/video/BV1Vy4y1C79p/)
 
 And build a better one: https://github.com/yinguobing/facial-landmark-detection-hrnet
-
-
-## Contributing
-
-Please read [CONTRIBUTING.md]() for details on our code of conduct, and the process for submitting pull requests to us.
 
 
 ## Authors
