@@ -102,17 +102,16 @@ For local applications, [butterfly](https://github.com/yinguobing/butterfly) is 
 
 ## Where to go next?
 
-There are many means to optimize this project and here are some tips I thought might be useful.
+Once you have accomplished all the applications above, it's a good time to move on to a more advanced repo with following features:
 
-- Add batch norm layers in the current network.
-- Use a different model.
-- Introduce a new loss fucntion.
-- Data augmentation.
-- Any thing you like, play with it!
+- Support multiple public dataset: WFLW, IBUG, etc.
+- Advanced model architecture: HRNet v2
+- Data augmentation: randomly scale/rotate/flip
+- Model optimization: quantization, pruning
 
-Also, there is another repo for landmark detection which is more advanced. It's a TensorFlow implementation of [HRNet](https://arxiv.org/pdf/1908.07919.pdf). Check it out if you are interested.
+Watch this video demo: [HRNet Facial Landmark Detection (bilibili)](https://www.bilibili.com/video/BV1Vy4y1C79p/)
 
-https://github.com/yinguobing/facial-landmark-detection-hrnet
+And build a better one: https://github.com/yinguobing/facial-landmark-detection-hrnet
 
 
 ## Contributing
