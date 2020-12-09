@@ -82,10 +82,10 @@ def _parse(example):
 
     # Extract features from single example
     image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
-    image_reshaped = tf.reshape(
-        image_decoded, [IMG_HEIGHT, IMG_WIDTH, IMG_CHANNEL])
-    image_float = tf.cast(image_reshaped, tf.float32)
-    points = tf.cast(parsed_features['label/marks'], tf.float32)
+    image_float = tf.cast(image_decoded, tf.float32)
+
+    points = tf.io.parse_tensor(parsed_features['label/marks'], tf.float32)
+    points = tf.cast(points, tf.float32)
 
     return image_float, points
 
