@@ -3,27 +3,19 @@ Convolutional Neural Network for facial landmarks detection.
 """
 import argparse
 
-import cv2
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-from model import LandmarkModel
+from dataset import get_parsed_dataset
+from model import build_landmark_model
 
-# The entire process includes training, evaluation and exporting, which are not
-# always executed one by one. Add arguments parser to give user the flexibility
-# to tune the process.
+# Introduce arguments parser to give user the flexibility to tune the process.
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_record', default='train.record', type=str,
                     help='Training record file')
 parser.add_argument('--val_record', default='validation.record', type=str,
                     help='validation record file')
-parser.add_argument('--model_dir', default='./train', type=str,
-                    help='training model directory')
-parser.add_argument('--log', default='./log', type=str,
-                    help='training log directory')
-parser.add_argument('--export_dir', default=None, type=str,
-                    help='directory to export the saved model')
 parser.add_argument('--epochs', default=1, type=int,
                     help='epochs for training')
 parser.add_argument('--batch_size', default=16, type=int,
@@ -35,127 +27,85 @@ parser.add_argument('--eval_only', default=False, type=bool,
 args = parser.parse_args()
 
 
-# CAUTION: The image width, height and channels should be consist with your
-# training data. Here they are set as 128 to be complied with the tutorial.
-# Mismatching of the image size will cause error of mismatching tensor shapes.
-IMG_WIDTH = 128
-IMG_HEIGHT = 128
-IMG_CHANNEL = 3
+if __name__ == '__main__':
+    # Checkpoint is used to track the training model so it could be restored
+    # later to resume training.
+    checkpoint_dir = "checkpoints"
 
-# The number of facial landmarks the model should output. By default the mark is
-# in 2D space.
-MARK_SIZE = 68
+    # Besides checkpoint, `saved_model` is another way to save the model for
+    # inference or optimization.
+    export_dir = "exported"
 
+    # The log directory for tensorboard.
+    log_dir = "logs"
 
-def get_compiled_model(output_size):
-    """Return a compiled landmark model.
-    Args:
-        output_size: the total number of landmarks coordinates (x + y).
+    # The input image's width, height and channels should be consist with your
+    # training data. Here they are set to be complied with the tutorial.
+    input_shape = (128, 128, 3)
 
-    Returns:
-        a compiled keras model.
-    """
-    # Construct the network.
-    model = LandmarkModel(output_size)
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                  loss=keras.losses.mean_squared_error,
-                  metrics=[keras.metrics.mean_squared_error])
-
-    return model
-
-
-def _parse(example):
-    """Extract data from a `tf.Example` protocol buffer.
-    Args:
-        example: a protobuf example.
-
-    Returns:
-        a parsed data and label pair.
-    """
-    # Defaults are not specified since both keys are required.
-    keys_to_features = {
-        'image/filename': tf.io.FixedLenFeature([], tf.string),
-        'image/encoded': tf.io.FixedLenFeature([], tf.string),
-        'label/marks': tf.io.FixedLenFeature([136], tf.float32),
-    }
-    parsed_features = tf.io.parse_single_example(example, keys_to_features)
-
-    # Extract features from single example
-    image_decoded = tf.image.decode_image(parsed_features['image/encoded'])
-    image_float = tf.cast(image_decoded, tf.float32)
-
-    points = tf.io.parse_tensor(parsed_features['label/marks'], tf.float32)
-    points = tf.cast(points, tf.float32)
-
-    return image_float, points
-
-
-def get_parsed_dataset(record_file, batch_size, epochs=None, shuffle=True):
-    """Return a parsed dataset for model.
-    Args:
-        record_file: the TFRecord file.
-        batch_size: batch size.
-        epochs: epochs of dataset.
-        shuffle: whether to shuffle the data.
-
-    Returns:
-        a parsed dataset.
-    """
-    # Init the dataset from the TFRecord file.
-    dataset = tf.data.TFRecordDataset(record_file)
-
-    # Use `Dataset.map()` to build a pair of a feature dictionary and a label
-    # tensor for each example.
-    if shuffle is True:
-        dataset = dataset.shuffle(buffer_size=10000)
-    dataset = dataset.map(
-        _parse, num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.repeat(epochs)
-    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-
-    return dataset
-
-
-def run():
-    """Train, eval and export the model."""
+    # The number of facial landmarks the model should output. By default the
+    # marks are in 2D space.
+    num_marks = 68
 
     # Create the Model
-    mark_model = get_compiled_model(MARK_SIZE*2)
+    model = build_landmark_model(input_shape=input_shape,
+                                 output_size=num_marks*2)
+
+    # Prepare for training. First restore the model if any checkpoint file available.
+    if not tf.io.gfile.exists(checkpoint_dir):
+        tf.io.gfile.mkdir(checkpoint_dir)
+        print("Checkpoint directory created: {}".format(checkpoint_dir))
+
+    latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
+    if latest_checkpoint:
+        print("Checkpoint found: {}, restoring...".format(latest_checkpoint))
+        model.load_weights(latest_checkpoint)
+        print("Checkpoint restored: {}".format(latest_checkpoint))
+    else:
+        print("Checkpoint not found. Model weights will be initialized randomly.")
+
+    # Sometimes the user only want to save the model. Skip training in this case.
+    if args.export_only:
+        if not tf.io.gfile.exists(export_dir):
+            tf.io.gfile.mkdir(export_dir)
+
+        if latest_checkpoint is None:
+            print("Warning: Model not restored from any checkpoint.")
+
+        print("Saving model to {} ...".format(export_dir))
+        model.save(export_dir)
+        print("Model saved at: {}".format(export_dir))
+        quit()
+
+    # Finally, it's time to train the model.
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01),
+                  loss=keras.losses.mean_squared_error)
+
+    # Construct a dataset for evaluation.
+    dataset_val = get_parsed_dataset(record_file=args.val_record,
+                                     batch_size=args.batch_size,
+                                     shuffle=False)
+
+    # If evaluation is required only.
+    if args.eval_only:
+        print('Starting to evaluate.')
+        evaluation = model.evaluate(dataset_val)
+        quit()
 
     # To save and log the training process, we need some callbacks.
-    callbacks = [keras.callbacks.TensorBoard(log_dir=args.log, update_freq=1024),
-                 keras.callbacks.ModelCheckpoint(filepath=args.model_dir,
-                                                 monitor='loss',
-                                                 save_freq=4096)]
+    callback_tb = keras.callbacks.TensorBoard(log_dir=log_dir)
+    callback_checkpoint = keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_dir+"/landmark",
+        save_weights_only=True,
+        save_best_only=True,
+        monitor='val_loss',
+        verbose=1)
+    callbacks = [callback_tb, callback_checkpoint]
 
-    # Train.
-    if not args.export_only and not args.eval_only:
-        # Get the training data ready.
-        train_dataset = get_parsed_dataset(record_file=args.train_record,
-                                           batch_size=args.batch_size,
-                                           epochs=args.epochs,
-                                           shuffle=True)
-        print('Starting to train.')
-        _ = mark_model.fit(train_dataset,
-                           epochs=args.epochs,
-                           callbacks=callbacks)
+    # Get the training data ready.
+    dataset_train = get_parsed_dataset(record_file=args.train_record,
+                                       batch_size=args.batch_size,
+                                       shuffle=True)
 
-    # Evaluate.
-    if not args.export_only:
-        print('Starting to evaluate.')
-        eval_dataset = get_parsed_dataset(record_file=args.val_record,
-                                          batch_size=args.batch_size,
-                                          epochs=1,
-                                          shuffle=False)
-        evaluation = mark_model.evaluate(eval_dataset)
-        print(evaluation)
-
-    # Save the model.
-    if args.export_dir:
-        print("Saving model to directory: {}".format(args.export_dir))
-        mark_model.save(args.export_dir, save_format='tf')
-
-
-if __name__ == '__main__':
-    run()
+    model.fit(dataset_train, validation_data=dataset_val, epochs=args.epochs,
+              callbacks=callbacks)
