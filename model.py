@@ -1,122 +1,116 @@
-"""This module provides the class implimentation of the network."""
+"""This module provides the function to build the network."""
 import tensorflow as tf
 from tensorflow import keras
 
 
-class LandmarkModel(keras.Model):
+def build_landmark_model(input_shape, output_size):
+    """Build the convolutional network model with Keras Functional API.
 
-    def __init__(self, output_size):
-        super(LandmarkModel, self).__init__(name='landmark_model')
+    Args:
+        input_shape: the shape of the input image, without batch size.
+        output_size: the number of output node, usually equals to the number of
+            marks times 2 (in 2d space).
 
-        # The model may take variable number of landmarks.
-        self.output_size = output_size
+    Returns:
+        a Keras model, not compiled.
+    """
 
-        # The model is composed of multiple layers that best be defined in the
-        # init function.
+    # The model is composed of multiple layers.
 
-        # Convolutional layers.
-        self.conv_1 = keras.layers.Conv2D(filters=32,
-                                          kernel_size=(3, 3),
-                                          activation='relu')
-        self.conv_2 = keras.layers.Conv2D(filters=64,
-                                          kernel_size=(3, 3),
-                                          strides=(1, 1),
-                                          padding='valid',
-                                          activation='relu')
-        self.conv_3 = keras.layers.Conv2D(filters=64,
-                                          kernel_size=(3, 3),
-                                          strides=(1, 1),
-                                          padding='valid',
-                                          activation=tf.nn.relu)
-        self.conv_4 = keras.layers.Conv2D(filters=64,
-                                          kernel_size=(3, 3),
-                                          strides=(1, 1),
-                                          padding='valid',
-                                          activation='relu')
-        self.conv_5 = keras.layers.Conv2D(filters=64,
-                                          kernel_size=[3, 3],
-                                          strides=(1, 1),
-                                          padding='valid',
-                                          activation='relu')
-        self.conv_6 = keras.layers.Conv2D(filters=128,
-                                          kernel_size=(3, 3),
-                                          strides=(1, 1),
-                                          padding='valid',
-                                          activation='relu')
-        self.conv_7 = keras.layers.Conv2D(filters=128,
-                                          kernel_size=[3, 3],
-                                          strides=(1, 1),
-                                          padding='valid',
-                                          activation='relu')
-        self.conv_8 = keras.layers.Conv2D(filters=256,
-                                          kernel_size=[3, 3],
-                                          strides=(1, 1),
-                                          padding='valid',
-                                          activation='relu')
+    # Convolutional layers.
+    conv_1 = keras.layers.Conv2D(filters=32,
+                                 kernel_size=(3, 3),
+                                 activation='relu')
+    conv_2 = keras.layers.Conv2D(filters=64,
+                                 kernel_size=(3, 3),
+                                 strides=(1, 1),
+                                 padding='valid',
+                                 activation='relu')
+    conv_3 = keras.layers.Conv2D(filters=64,
+                                 kernel_size=(3, 3),
+                                 strides=(1, 1),
+                                 padding='valid',
+                                 activation='relu')
+    conv_4 = keras.layers.Conv2D(filters=64,
+                                 kernel_size=(3, 3),
+                                 strides=(1, 1),
+                                 padding='valid',
+                                 activation='relu')
+    conv_5 = keras.layers.Conv2D(filters=64,
+                                 kernel_size=[3, 3],
+                                 strides=(1, 1),
+                                 padding='valid',
+                                 activation='relu')
+    conv_6 = keras.layers.Conv2D(filters=128,
+                                 kernel_size=(3, 3),
+                                 strides=(1, 1),
+                                 padding='valid',
+                                 activation='relu')
+    conv_7 = keras.layers.Conv2D(filters=128,
+                                 kernel_size=[3, 3],
+                                 strides=(1, 1),
+                                 padding='valid',
+                                 activation='relu')
+    conv_8 = keras.layers.Conv2D(filters=256,
+                                 kernel_size=[3, 3],
+                                 strides=(1, 1),
+                                 padding='valid',
+                                 activation='relu')
 
-        # Pooling layers.
-        self.pool_1 = keras.layers.MaxPool2D(pool_size=(2, 2),
-                                             strides=(2, 2),
-                                             padding='valid')
-        self.pool_2 = keras.layers.MaxPool2D(pool_size=(2, 2),
-                                             strides=(2, 2),
-                                             padding='valid')
-        self.pool_3 = keras.layers.MaxPool2D(pool_size=(2, 2),
-                                             strides=(2, 2),
-                                             padding='valid')
-        self.pool_4 = keras.layers.MaxPool2D(pool_size=[2, 2],
-                                             strides=(1, 1),
-                                             padding='valid')
+    # Pooling layers.
+    pool_1 = keras.layers.MaxPool2D(pool_size=(2, 2),
+                                    strides=(2, 2),
+                                    padding='valid')
+    pool_2 = keras.layers.MaxPool2D(pool_size=(2, 2),
+                                    strides=(2, 2),
+                                    padding='valid')
+    pool_3 = keras.layers.MaxPool2D(pool_size=(2, 2),
+                                    strides=(2, 2),
+                                    padding='valid')
+    pool_4 = keras.layers.MaxPool2D(pool_size=[2, 2],
+                                    strides=(1, 1),
+                                    padding='valid')
 
-        # Dense layers.
-        self.dense_1 = keras.layers.Dense(units=1024,
-                                          activation='relu',
-                                          use_bias=True)
-        self.dense_2 = keras.layers.Dense(units=self.output_size,
-                                          activation=None,
-                                          use_bias=True)
+    # Dense layers.
+    dense_1 = keras.layers.Dense(units=1024,
+                                 activation='relu',
+                                 use_bias=True)
+    dense_2 = keras.layers.Dense(units=output_size,
+                                 activation=None,
+                                 use_bias=True)
 
-        # Flatten layers.
-        self.flatten_1 = keras.layers.Flatten()
+    # Flatten layers.
+    flatten_1 = keras.layers.Flatten()
 
-    def call(self, inputs):
-        """Network forward definition. Using the layers defined in the `__init__`
-        Args:
-            inputs: input of the network.
-        """
+    # All layers got. Define the forward propgation.
+    inputs = keras.Input(shape=input_shape, name="image_input")
 
-        # |== Layer 1 ==|
-        inputs = self.conv_1(inputs)
-        inputs = self.pool_1(inputs)
+    # |== Layer 1 ==|
+    x = conv_1(inputs)
+    x = pool_1(x)
 
-        # |== Layer 2 ==|
-        inputs = self.conv_2(inputs)
-        inputs = self.conv_3(inputs)
-        inputs = self.pool_2(inputs)
+    # |== Layer 2 ==|
+    x = conv_2(x)
+    x = conv_3(x)
+    x = pool_2(x)
 
-        # |== Layer 3 ==|
-        inputs = self.conv_4(inputs)
-        inputs = self.conv_5(inputs)
-        inputs = self.pool_3(inputs)
+    # |== Layer 3 ==|
+    x = conv_4(x)
+    x = conv_5(x)
+    x = pool_3(x)
 
-        # |== Layer 4 ==|
-        inputs = self.conv_6(inputs)
-        inputs = self.conv_7(inputs)
-        inputs = self.pool_4(inputs)
+    # |== Layer 4 ==|
+    x = conv_6(x)
+    x = conv_7(x)
+    x = pool_4(x)
 
-        # |== Layer 5 ==|
-        inputs = self.conv_8(inputs)
+    # |== Layer 5 ==|
+    x = conv_8(x)
 
-        # |== Layer 6 ==|
-        inputs = self.flatten_1(inputs)
-        inputs = self.dense_1(inputs)
-        inputs = self.dense_2(inputs)
+    # |== Layer 6 ==|
+    x = flatten_1(x)
+    x = dense_1(x)
+    outputs = dense_2(x)
 
-        return inputs
-
-    def compute_output_shape(self, input_shape):
-        # Override this function to use the subclassed model as part of a
-        # functional-style model.
-        shape = tf.TensorShape(input_shape).as_list()
-        shape[-1] = self.output_size
-        return tf.TensorShape(shape)
+    # Return the model
+    return keras.Model(inputs=inputs, outputs=outputs, name="landmark")
