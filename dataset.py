@@ -45,11 +45,11 @@ def get_parsed_dataset(record_file, batch_size, shuffle=True):
 
     # Use `Dataset.map()` to build a pair of a feature dictionary and a label
     # tensor for each example.
+    AUTOTUNE = tf.data.experimental.AUTOTUNE
     if shuffle is True:
-        dataset = dataset.shuffle(buffer_size=10000)
-    dataset = dataset.map(
-        _parse, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        dataset = dataset.shuffle(buffer_size=4096)
+    dataset = dataset.map(_parse, num_parallel_calls=AUTOTUNE)
     dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    dataset = dataset.prefetch(buffer_size=AUTOTUNE)
 
     return dataset
