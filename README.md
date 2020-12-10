@@ -43,25 +43,21 @@ The following command shows how to train the model for 500 steps and evaluate it
 ```bash
 # From the repo's root directory
 python3 landmark.py \
-    --train_record train.record \
-    --val_record validation.record \
-    --model_dir train \
-    --train_steps 500 \
-    --batch_size 32
+    --train_record=train.record \
+    --val_record=validation.record \
+    --batch_size=32 \
+    --epochs=10
 ```
 
 ## Export
 
 ### For PC/Cloud applications
 
-TensorFlow's [SavedModel](https://www.tensorflow.org/guide/saved_model) is recommended and is the default option. Use the argument `--export_dir` to set the directory where the model should be saved.
+TensorFlow's [SavedModel](https://www.tensorflow.org/guide/saved_model) is recommended and is the default option. Use the argument `--export_only` to save the model.
 
 ```bash
 # From the repo's root directory
-python3 landmark.py \
-    --model_dir train \
-    --export_dir saved_model \
-    --export_only True
+python3 landmark.py --export_only=True
 ```
 
 ### For Mobile/Embedded/IoT devices
