@@ -1,15 +1,14 @@
 
 # cnn-facial-landmark
 
-Facial landmark detection based on convolution neural network.
+Facial landmarks detection based on convolution neural network.
 
-The model is build with TensorFlow, the training code is provided so you can train your own model with your own datasets.
-
-A sample gif extracted from video file showing the detection result.
+Here is a sample gif showing the detection result.
 
 ![](doc/demo01.gif)
 
-This is the companion code for the tutorial on deep learning [here](https://yinguobing.com/facial-landmark-localization-by-deep-learning-background/), which includes background, dataset, preprocessing, model architecture, training and deployment. I tried my best to make them simple and easy to understand for beginners. Feel free to open issue when you are stuck or have some wonderful ideas to share.
+
+The model is build with TensorFlow, and training code is provided so you can train your own model with your own datasets. The companion tutorial is also [available](https://yinguobing.com/facial-landmark-localization-by-deep-learning-background/), which includes background, dataset, preprocessing, model architecture, training and deployment. I tried my best to make them simple and easy to understand for beginners. Feel free to open issues when you are stuck or have some wonderful ideas to share.
 
 
 ## Getting Started
@@ -33,12 +32,7 @@ git clone https://github.com/yinguobing/cnn-facial-landmark.git
 
 ## Train & evaluate
 
-Before training started, make sure the following requirements are met.
-- training and evaluation tf-record file.
-- a directory to store the check point files.
-- hyper parameters like training steps, batch size, number of epochs.
-
-The following command shows how to train the model for 500 steps and evaluate it after training.
+The following command shows how to train the model for 10 epochs.
 
 ```bash
 # From the repo's root directory
@@ -47,6 +41,12 @@ python3 landmark.py \
     --val_record=validation.record \
     --batch_size=32 \
     --epochs=10
+```
+Training and testing files are required to be stored as TensorFlow Record files. You can generate them by yourself, or checkout the branch `features/tfrecord-marks-68` in this repository: [face-mesh-generator](https://github.com/yinguobing/face-mesh-generator).
+
+```bash
+git clone https://github.com/yinguobing/face-mesh-generator.git
+git checkout features/tfrecord-marks-68
 ```
 
 ## Export
@@ -73,7 +73,7 @@ Once you have accomplished all the applications above, it's a good time to move 
 - Data augmentation: randomly scale/rotate/flip
 - Model optimization: quantization, pruning
 
-Watch this video demo: [HRNet Facial Landmark Detection (bilibili)](https://www.bilibili.com/video/BV1Vy4y1C79p/)
+Watch this demo video: [HRNet Facial Landmark Detection (bilibili)](https://www.bilibili.com/video/BV1Vy4y1C79p/)
 
 And build a better one: https://github.com/yinguobing/facial-landmark-detection-hrnet
 
