@@ -78,6 +78,19 @@ def build_landmark_model(input_shape, output_size):
     dense_2 = keras.layers.Dense(units=output_size,
                                  activation=None,
                                  use_bias=True)
+    
+    # Batch norm layers
+    bn_1 = keras.layers.BatchNormalization()
+    bn_2 = keras.layers.BatchNormalization()
+    bn_3 = keras.layers.BatchNormalization()
+    bn_4 = keras.layers.BatchNormalization()
+    bn_5 = keras.layers.BatchNormalization()
+    bn_6 = keras.layers.BatchNormalization()
+    bn_7 = keras.layers.BatchNormalization()
+    bn_8 = keras.layers.BatchNormalization()
+    bn_9 = keras.layers.BatchNormalization()
+    bn_10 = keras.layers.BatchNormalization()
+
 
     # Flatten layers.
     flatten_1 = keras.layers.Flatten()
@@ -87,29 +100,39 @@ def build_landmark_model(input_shape, output_size):
 
     # |== Layer 1 ==|
     x = conv_1(inputs)
+    x = bn_1(x)
     x = pool_1(x)
 
     # |== Layer 2 ==|
     x = conv_2(x)
+    x = bn_2(x)
     x = conv_3(x)
+    x = bn_3(x)
     x = pool_2(x)
 
     # |== Layer 3 ==|
     x = conv_4(x)
+    x = bn_4(x)
     x = conv_5(x)
+    x = bn_5(x)
     x = pool_3(x)
 
     # |== Layer 4 ==|
     x = conv_6(x)
+    x = bn_6(x)
     x = conv_7(x)
+    x = bn_7(x)
     x = pool_4(x)
 
     # |== Layer 5 ==|
     x = conv_8(x)
+    x = bn_8(x)
 
     # |== Layer 6 ==|
     x = flatten_1(x)
+    x = bn_9(x)
     x = dense_1(x)
+    x = bn_10(x)
     outputs = dense_2(x)
 
     # Return the model
