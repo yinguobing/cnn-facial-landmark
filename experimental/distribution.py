@@ -1,14 +1,22 @@
+"""Draw the histgram of the pose distributions
+
+Run it like this:
+    `python3 -m experimental.distribution.py`
+
+Do not forget to set the dataset file path.
+"""
+
 import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..dataset import get_parsed_dataset
-from pose_estimator import PoseEstimator
+from dataset import get_parsed_dataset
+from experimental.pose_estimator import PoseEstimator
 
 if __name__ == "__main__":
 
-    ds = get_parsed_dataset("../data/helen.record", 1, False)
+    ds = get_parsed_dataset("data/helen.record", 1, False)
 
     # Counters
     n_faces = 0
