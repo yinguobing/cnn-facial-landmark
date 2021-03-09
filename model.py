@@ -17,6 +17,9 @@ def build_landmark_model(input_shape, output_size):
 
     # The model is composed of multiple layers.
 
+    # Preprocessing layers.
+    preprocess = keras.layers.experimental.preprocessing.Normalization()
+
     # Convolutional layers.
     conv_1 = keras.layers.Conv2D(filters=32,
                                  kernel_size=(3, 3),
@@ -97,8 +100,11 @@ def build_landmark_model(input_shape, output_size):
     # All layers got. Define the forward propgation.
     inputs = keras.Input(shape=input_shape, name="image_input")
 
+    # Preprocess the inputs.
+    x = preprocess(inputs)
+
     # |== Layer 1 ==|
-    x = conv_1(inputs)
+    x = conv_1(x)
     x = bn_1(x)
     x = pool_1(x)
 
