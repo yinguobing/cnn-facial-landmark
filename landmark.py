@@ -73,12 +73,12 @@ if __name__ == '__main__':
             print("Warning: Model not restored from any checkpoint.")
 
         print("Saving model to {} ...".format(export_dir))
-        model.save(export_dir)
+        model.save(export_dir, include_optimizer=False)
         print("Model saved at: {}".format(export_dir))
         quit()
 
     # Finally, it's time to train the model.
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01),
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
                   loss=keras.losses.mean_squared_error)
 
     # Construct a dataset for evaluation.
