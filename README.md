@@ -96,8 +96,11 @@ Yin Guobing (尹国冰) - [yinguobing](https://github.com/yinguobing/)
 
 ## Changelog
 
+### Update 2021-03-09
+A preprocessing layer was added and new model weights provided.
+
 ### Update 2020-06-20
-Making `Keras`  the default way of building models.
+Making `Keras` the default way of building models.
 
 ### Update 2019-08-08
 A new input function is added to export the model to take raw tensor input. Use the `--raw_input` argument in the exporting command. This is useful if you want to "freeze" the model later.
